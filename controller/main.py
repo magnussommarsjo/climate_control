@@ -5,7 +5,7 @@ import datetime
 import storage
 import logging
 
-logging.basicConfig()
+logging.basicConfig(level=logging.INFO)
 log = logging.getLogger()
 
 url = "http://192.168.1.21/read/"  # Address to sensor
@@ -24,5 +24,6 @@ while True:
     data['timestamp'] = timestamp.isoformat()
     csv_storage.store(data)
 
+    log.info(util.print_dict(data))
     time.sleep(10)
         
