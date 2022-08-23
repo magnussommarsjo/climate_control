@@ -1,13 +1,13 @@
 """functions for reading data from diffrent sources"""
 
-import requests
+import httpx
 import json
 
 def get_data_from_url(url: str) -> dict:
     """
     Returns a dictionary of the url data or None if the url is not valid.
     """
-    response = requests.get(url)
+    response = httpx.get(url)
     if response.status_code == 200:
         return json.loads(response.text)
     else:
