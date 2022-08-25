@@ -1,29 +1,26 @@
-import util
-import data_central as dc
-import time
-import datetime
-import storage
 import logging
+import sys
+import traceback
 
-logging.basicConfig(level=logging.INFO)
-log = logging.getLogger()
+# Setting up logging
+FORMAT = "%(asctime)s::%(levelname)s::%(name)s::%(message)s"
+logging.basicConfig(level=logging.INFO, filename="log.txt", filemode="w", format=FORMAT)
+log = logging.getLogger(__name__)
 
-url = "http://192.168.1.21/read/"  # Address to sensor
+# Logg all unhandled exceptions
+def exception_handler(*exc_info):
+    msg = "".join(traceback.format_exception(*exc_info))
+    log.exception(f"Unhandeled exception: {msg}")
 
-csv_storage = storage.CsvStorage(".")
+
+sys.excepthook = exception_handler
 
 
-while True:
-    data = dc.get_data_from_url(url)
-    if data is None:
-        log.info("Could not get reading")
-        continue
+def main():
+    from sensors import continious_logging
 
-    # Add time information to data
-    timestamp = datetime.datetime.now()
-    data['timestamp'] = timestamp.isoformat()
-    csv_storage.store(data)
+    continious_logging(sample_time=5)
 
-    log.info(util.print_dict(data))
-    time.sleep(10)
-        
+
+if __name__ == "__main__":
+    main()
