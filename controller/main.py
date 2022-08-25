@@ -1,6 +1,7 @@
 import logging
 import sys
 import traceback
+import time
 
 # Setting up logging
 FORMAT = "%(asctime)s::%(levelname)s::%(name)s::%(message)s"
@@ -17,9 +18,10 @@ sys.excepthook = exception_handler
 
 
 def main():
+    time.sleep(60) # Give time for Network to connect
     from sensors import continious_logging
 
-    continious_logging(sample_time=5)
+    continious_logging(sample_time=10)
 
 
 if __name__ == "__main__":
