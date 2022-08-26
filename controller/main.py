@@ -18,6 +18,7 @@ sys.excepthook = exception_handler
 
 
 def main():
+    log.info("Main entrypoint started")
     time.sleep(60) # Give time for Network to connect
     from sensors import continious_logging
 
