@@ -4,7 +4,6 @@ import plotly.express as px
 from dashboard.data import load_data, Schema
 from controller.storage import DATA_PATH  # Todo: Coupling that is unwanted
 
-
 class ID(str, enum.Enum):
     MAIN_GRAPH = "main_graph"
     UPDATE_BUTTON = "update_button"

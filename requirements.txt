@@ -1,4 +1,0 @@
-httpx
-dash
-plotly
-pandas

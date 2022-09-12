@@ -17,8 +17,8 @@ def exception_handler(*exc_info):
 sys.excepthook = exception_handler
 
 # Local package imports after logging is set up in case of errors when importing packages
-from sensors import continious_logging
-from storage import CsvStorage
+from controller.sensors import continious_logging
+from controller.storage import CsvStorage
 
 SAMPLE_TIME = 60
 NETWORK_SLEEP = 60
