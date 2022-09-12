@@ -7,7 +7,7 @@ import abc
 
 log = logging.getLogger(__name__)
 
-DATA_PATH = Path(__file__).parent.joinpath("data").resolve()
+DATA_PATH = Path(__file__).parents[1].joinpath("data").resolve()
 
 
 class Storage(abc.ABC):

@@ -20,11 +20,19 @@ sys.excepthook = exception_handler
 from sensors import continious_logging
 from storage import CsvStorage
 
+SAMPLE_TIME = 60
+NETWORK_SLEEP = 60
+
+
 def main():
     log.info("Main entrypoint started")
-    time.sleep(60) # Give time for Network to connect
     storage = CsvStorage()
-    continious_logging(storage, sample_time=10)
+
+    log.info(f"Wait {NETWORK_SLEEP}s for network to connect")
+    time.sleep(NETWORK_SLEEP)
+
+    log.info(f"Continious logging started with sample time {SAMPLE_TIME}s")
+    continious_logging(storage, sample_time=SAMPLE_TIME)
 
 
 if __name__ == "__main__":
