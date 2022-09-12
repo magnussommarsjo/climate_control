@@ -5,7 +5,9 @@ import time
 
 # Setting up logging
 FORMAT = "%(asctime)s::%(levelname)s::%(name)s::%(message)s"
-logging.basicConfig(level=logging.INFO, filename="log.txt", filemode="w", format=FORMAT)
+logging.basicConfig(
+    level=logging.INFO, filename="log_controller.txt", filemode="w", format=FORMAT
+)
 log = logging.getLogger(__name__)
 
 # Logg all unhandled exceptions
