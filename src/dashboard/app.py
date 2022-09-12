@@ -55,4 +55,8 @@ def update_figure(_):
 
 
 if __name__ == "__main__":
-    app.run(debug=DEBUG, port="80")
+    if DEBUG:
+        app.run(debug=DEBUG)
+    else:
+        app.run(debug=DEBUG, host="192.168.1.20", port="80")
+
