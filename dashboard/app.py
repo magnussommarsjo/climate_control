@@ -1,7 +1,8 @@
 from dash import Dash, dcc, html, Input, Output
 import enum
 import plotly.express as px
-from data import load_data, Schema
+from dashboard.data import load_data, Schema
+from controller.storage import DATA_PATH  # Todo: Coupling that is unwanted
 
 
 class ID(str, enum.Enum):
@@ -25,7 +26,7 @@ app.layout = html.Div(
     Input(ID.UPDATE_BUTTON, "n_clicks"),
 )
 def update_figure(_):
-    data = load_data("")
+    data = load_data(DATA_PATH)
     fig = px.line(data, x=Schema.TIME, y=Schema.VALUE, color=Schema.CATEGORY)
     fig.update_layout(title="Sensor values", xaxis_title="Time", yaxis_title="Value")
 
