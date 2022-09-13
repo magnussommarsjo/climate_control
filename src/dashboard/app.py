@@ -2,10 +2,14 @@ import logging
 import traceback
 import sys
 
+DEBUG = True
+HOST = "192.168.1.20"
+PORT = "80"
+
 # Setting up logging
 FORMAT = "%(asctime)s::%(levelname)s::%(name)s::%(message)s"
 logging.basicConfig(
-    level=logging.INFO, filename="log_dashboard.txt", filemode="w", format=FORMAT
+    level=logging.DEBUG, filename="log_dashboard.txt", filemode="w", format=FORMAT
 )
 log = logging.getLogger(__name__)
 
@@ -23,7 +27,6 @@ import plotly.express as px
 from dashboard.data import load_data, Schema
 from controller.storage import DATA_PATH  # Todo: Coupling that is unwanted
 
-DEBUG = False
 
 
 class ID(str, enum.Enum):
@@ -48,15 +51,13 @@ app.layout = html.Div(
 )
 def update_figure(_):
     data = load_data(DATA_PATH)
+    log.info("Updating figure")
     fig = px.line(data, x=Schema.TIME, y=Schema.VALUE, color=Schema.CATEGORY)
     fig.update_layout(title="Sensor values", xaxis_title="Time", yaxis_title="Value")
-
+    log.info("Figure updated")
     return fig
 
 
 if __name__ == "__main__":
-    if DEBUG:
-        app.run(debug=DEBUG)
-    else:
-        app.run(debug=DEBUG, host="192.168.1.20", port="80")
+    app.run(debug=DEBUG, host=HOST, port=PORT)
 
