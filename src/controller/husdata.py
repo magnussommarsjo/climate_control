@@ -1,7 +1,6 @@
 import enum
 import json
 import logging
-from xxlimited import Str
 import httpx
 
 log = logging.getLogger(__name__)
@@ -68,6 +67,24 @@ class ID_C30(str, enum.Enum):
     PROG_VER_MINOR = "2F01"
     PROG_VER_REVISION = "2F02"
 
+@enum.unique
+class DataType(int, enum.Enum):
+    """ Identifier of Data type via the first integer in the register ID
+    
+    Reference:
+    https://varmepump.one/docs/h60-manual/for-advanced-users/h1-development-guide/#registers
+    """
+    DEGREES = 0
+    ON_OFF_BOOL = 1
+    NUMBER = 2
+    PERCENT = 3
+    AMPERE = 4
+    KWH = 5
+    HOURS = 6
+    MINUTES = 7
+    DEGREE_MINUTES = 8
+    KW = 9
+
 
 def print_data(data: dict, ID: enum.Enum) -> None:
     """Prints translated data if exist
@@ -81,7 +98,7 @@ def print_data(data: dict, ID: enum.Enum) -> None:
 
 
 class H60:
-    def __init__(self, address: Str):
+    def __init__(self, address: str):
         """Instantiates an H60 unit
 
         Args:
@@ -103,10 +120,16 @@ class H60:
     def get_all_data(self) -> dict:
         return self._get_data_from_url(self.url + "alldata")
 
+    def set_variable(self, idx: str, value: str) -> None:
+        httpx.get(f"{self.url}set?idx={idx}&val={value}")
+        log.info(f"Tried to set variable {idx} to {value}")
+
 
 def main():
-    h60 = H60("192.168.1.12", ID_C30)
+    h60 = H60("192.168.1.12")
     print_data(h60.get_all_data(), ID_C30)
+    #h60.set_variable(ID_C30.ROOM_TEMP_SETPOINT, "200")
+
 
 
 if __name__ == "__main__":
