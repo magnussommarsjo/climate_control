@@ -1,6 +1,7 @@
 import enum
 import json
 import logging
+from xxlimited import Str
 import httpx
 
 log = logging.getLogger(__name__)
@@ -68,41 +69,44 @@ class ID_C30(str, enum.Enum):
     PROG_VER_REVISION = "2F02"
 
 
-def _get_data_from_url(url: str) -> dict:
-    response = httpx.get(url)
-    if response.status_code == 200:
-        return json.loads(response.text)
-    else:
-        return None
+def print_data(data: dict, ID: enum.Enum) -> None:
+    """Prints translated data if exist
+
+    Args:
+        data: Raw data returned from request as a dictionary
+        ID: Index registry for your controller as  a registry
+    """
+    for id in ID:
+        print(id.name, ":", data.get(id, None))
 
 
 class H60:
-    def __init__(self, address: str, ID: enum.Enum):
-        """_summary_
+    def __init__(self, address: Str):
+        """Instantiates an H60 unit
 
         Args:
             address: IP Address to H60
-            ID: Index registry for your controller
         """
         self.url = "http://" + address + "/api/"
-        self.ID = ID
+
+    @staticmethod
+    def _get_data_from_url(url: str) -> dict:
+        response = httpx.get(url)
+        if response.status_code == 200:
+            return json.loads(response.text)
+        else:
+            return None
 
     def get_status(self) -> dict:
-        return _get_data_from_url(self.url + "status")
+        return self._get_data_from_url(self.url + "status")
 
     def get_all_data(self) -> dict:
-        return _get_data_from_url(self.url + "alldata")
-
-    def print_data(self) -> None:
-        """Prints trranslated data if exist"""
-        data = self.get_all_data()
-        for id in self.ID:
-            print(id.name, ":", data.get(id, None))
+        return self._get_data_from_url(self.url + "alldata")
 
 
 def main():
     h60 = H60("192.168.1.12", ID_C30)
-    h60.print_data()
+    print_data(h60.get_all_data(), ID_C30)
 
 
 if __name__ == "__main__":
