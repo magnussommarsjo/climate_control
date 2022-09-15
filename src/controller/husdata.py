@@ -1,6 +1,7 @@
 import enum
 import json
 import logging
+from typing import Any
 import httpx
 
 log = logging.getLogger(__name__)
@@ -67,13 +68,15 @@ class ID_C30(str, enum.Enum):
     PROG_VER_MINOR = "2F01"
     PROG_VER_REVISION = "2F02"
 
+
 @enum.unique
 class DataType(int, enum.Enum):
-    """ Identifier of Data type via the first integer in the register ID
-    
+    """Identifier of Data type via the first integer in the register ID
+
     Reference:
     https://varmepump.one/docs/h60-manual/for-advanced-users/h1-development-guide/#registers
     """
+
     DEGREES = 0
     ON_OFF_BOOL = 1
     NUMBER = 2
@@ -114,11 +117,47 @@ class H60:
         else:
             return None
 
+    @staticmethod
+    def _convert_raw(idx: str, value: str) -> Any:
+        """Converts raw value from H60 to its propper data type
+
+        Args:
+            idx: Index of the variable
+            value: Raw value from H60 request response
+        """
+        if value is None:
+            return None
+
+        no = int(idx[0])
+        if no in {
+            DataType.DEGREES,
+            DataType.NUMBER,
+            DataType.PERCENT,
+            DataType.AMPERE,
+            DataType.KWH,
+        }:
+            value = float(value) / 10
+        elif no == DataType.ON_OFF_BOOL:
+            value = bool(int(value))
+        elif no in {
+            DataType.HOURS,
+            DataType.MINUTES,
+            DataType.DEGREE_MINUTES,
+            DataType.KW,
+        }:
+            value = int(value)
+        else:
+            raise ValueError(f"Could not identify data type of {idx}")
+        return value
+
     def get_status(self) -> dict:
         return self._get_data_from_url(self.url + "status")
 
     def get_all_data(self) -> dict:
-        return self._get_data_from_url(self.url + "alldata")
+        data = self._get_data_from_url(self.url + "alldata")
+        for idx, value in data.items():
+            data[idx] = self._convert_raw(idx, value)
+        return data
 
     def set_variable(self, idx: str, value: str) -> None:
         httpx.get(f"{self.url}set?idx={idx}&val={value}")
@@ -128,8 +167,7 @@ class H60:
 def main():
     h60 = H60("192.168.1.12")
     print_data(h60.get_all_data(), ID_C30)
-    #h60.set_variable(ID_C30.ROOM_TEMP_SETPOINT, "200")
-
+    # h60.set_variable(ID_C30.ROOM_TEMP_SETPOINT, "200")
 
 
 if __name__ == "__main__":
