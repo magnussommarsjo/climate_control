@@ -1,5 +1,28 @@
 import enum
 
+
+@enum.unique
+class DataType(int, enum.Enum):
+    """Identifier of Data type via the first integer in the register ID
+
+    Reference:
+    https://varmepump.one/docs/h60-manual/for-advanced-users/h1-development-guide/#registers
+    """
+
+    DEGREES = 0
+    ON_OFF_BOOL = 1
+    NUMBER = 2
+    PERCENT = 3
+    AMPERE = 4
+    KWH = 5
+    HOURS = 6
+    MINUTES = 7
+    DEGREE_MINUTES = 8
+    KW = 9
+
+def isDataType(idx: str, data_type: DataType):
+    return data_type == int(idx[0])
+
 @enum.unique
 class ID_C30(str, enum.Enum):
     """Indexes for IVT Rego 1000 Controller and Bosh Pro Control 500 Controller
@@ -60,23 +83,3 @@ class ID_C30(str, enum.Enum):
     PROG_VER_MAJOR = "2F00"
     PROG_VER_MINOR = "2F01"
     PROG_VER_REVISION = "2F02"
-
-
-@enum.unique
-class DataType(int, enum.Enum):
-    """Identifier of Data type via the first integer in the register ID
-
-    Reference:
-    https://varmepump.one/docs/h60-manual/for-advanced-users/h1-development-guide/#registers
-    """
-
-    DEGREES = 0
-    ON_OFF_BOOL = 1
-    NUMBER = 2
-    PERCENT = 3
-    AMPERE = 4
-    KWH = 5
-    HOURS = 6
-    MINUTES = 7
-    DEGREE_MINUTES = 8
-    KW = 9

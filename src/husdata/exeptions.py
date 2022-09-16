@@ -3,3 +3,6 @@ class ControllerError(Exception):
 
 class NotWritableError(ControllerError):
     pass
+
+class TypeError(ControllerError):
+    pass

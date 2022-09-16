@@ -1,8 +1,9 @@
 import httpx
 import json
-from typing import Any
+from typing import Any, Optional
 import logging
-from .registers import DataType
+import husdata.exeptions as exceptions
+from .registers import DataType, isDataType
 
 log = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ class H60:
             return None
 
     @staticmethod
-    def _convert_raw(idx: str, value: str) -> Any:
+    def _convert_raw_value(idx: str, value: str) -> Any:
         """Converts raw value from H60 to its propper data type
 
         Convcersion based on H1 developer manual but modified to work with Regoo 1000
@@ -38,6 +39,7 @@ class H60:
             return None
 
         no = int(idx[0])
+
         if no in {
             DataType.DEGREES,
             DataType.PERCENT,
@@ -62,13 +64,38 @@ class H60:
             raise ValueError(f"Could not identify data type of {idx}")
         return value
 
+    def toggle_bool(self, idx: str, state: Optional[bool] = None) -> None:
+        """Toggles a boolean on or off
+
+        Args:
+            idx: Index to toggle
+            state: Optional state to set True/False, otherwise toggles between states
+
+        Raises:
+            exceptions.TypeError: If Index is not an boolean
+        """
+        if not isDataType(idx, DataType.ON_OFF_BOOL):
+            raise exceptions.TypeError(f"{idx} is not a boolean")
+
+        data = self.get_all_data()
+        value: bool = data[idx]
+
+        if value == state:
+            # Same state, no need do do anything
+            return
+        if value:
+            self.set_variable(idx, "0")
+        else:
+            self.set_variable(idx, "1")
+
     def get_status(self) -> dict:
         return self._get_data_from_url(self.url + "status")
 
-    def get_all_data(self) -> dict:
+    def get_all_data(self, convert: bool = True) -> dict:
         data = self._get_data_from_url(self.url + "alldata")
-        for idx, value in data.items():
-            data[idx] = self._convert_raw(idx, value)
+        if convert:
+            for idx, value in data.items():
+                data[idx] = self._convert_raw_value(idx, value)
         return data
 
     def set_variable(self, idx: str, value: str) -> None:

@@ -1,7 +1,9 @@
+from dataclasses import dataclass
+from datetime import datetime
 import logging
 
 from husdata.registers import ID_C30
-from husdata.exeptions import NotWritableError
+import husdata.exeptions as exceptions
 from husdata.gateway import H60
 from husdata.util import print_data
 
@@ -9,6 +11,8 @@ log = logging.getLogger(__name__)
 
 
 class Rego1000(H60):
+    ID=ID_C30
+
     WRITABLE_VARS = {
         ID_C30.ROOM_TEMP_SETPOINT,
         ID_C30.ROOM_SENSOR_INFLUENCE,
@@ -29,9 +33,9 @@ class Rego1000(H60):
 
     def set_variable(self, idx: str, value: str) -> None:
         if idx not in self.WRITABLE_VARS:
-            raise NotWritableError(f"{idx} is a read-only variable.")
+            raise exceptions.NotWritableError(f"{idx} is a read-only variable.")
 
-        return super().set_variable(idx, value)
+        super().set_variable(idx, value)
 
 
 def main():
