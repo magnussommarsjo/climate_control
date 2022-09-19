@@ -1,17 +1,15 @@
-from dataclasses import dataclass
-from datetime import datetime
 import logging
 
 from husdata.registers import ID_C30
 import husdata.exeptions as exceptions
 from husdata.gateway import H60
-from husdata.util import print_data
+from husdata.util import print_data, clamp_value
 
 log = logging.getLogger(__name__)
 
 
 class Rego1000(H60):
-    ID=ID_C30
+    ID = ID_C30
 
     WRITABLE_VARS = {
         ID_C30.ROOM_TEMP_SETPOINT,
@@ -35,6 +33,10 @@ class Rego1000(H60):
         if idx not in self.WRITABLE_VARS:
             raise exceptions.NotWritableError(f"{idx} is a read-only variable.")
 
+        if idx == ID_C30.OUTDOOR_TEMP_OFFSET:
+            # Only accepts values  within range of -10 to 10
+            value = clamp_value(value, -10, 10)
+
         super().set_variable(idx, value)
 
 
@@ -42,7 +44,7 @@ def main():
     controller = Rego1000("192.168.1.12")
     print_data(controller.get_all_data(), ID_C30)
     controller.set_variable(ID_C30.ROOM_TEMP_SETPOINT, "200")  # WRITEABLE
-    #controller.set_variable(ID_C30.HEATING_SETPOINT, "200")  # READONLY
+    # controller.set_variable(ID_C30.HEATING_SETPOINT, "200")  # READONLY
 
 
 if __name__ == "__main__":

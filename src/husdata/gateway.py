@@ -101,4 +101,8 @@ class H60:
     def set_variable(self, idx: str, value: str) -> None:
         httpx.get(f"{self.url}set?idx={idx}&val={value}")
         log.info(f"Tried to set variable {idx} to {value}")
+    
+    def get_variable(self, idx: str) -> Any:
+        data = self.get_all_data()
+        return data[idx]
         

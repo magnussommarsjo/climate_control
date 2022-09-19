@@ -9,3 +9,11 @@ def print_data(data: dict, ID: enum.Enum) -> None:
     """
     for id in ID:
         print(id.name, ":", data.get(id, None))
+
+def clamp_value(value: float, min_value: float, max_value: float):
+    if value > max_value:
+        return max_value
+    elif value < min_value:
+        return min_value
+    else:
+        return value
