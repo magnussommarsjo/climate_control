@@ -11,6 +11,7 @@ log = logging.getLogger(__name__)
 def continious_logging(storage: Storage, sample_time: int = 10) -> NoReturn:
     url = "http://192.168.1.21/read/"  # Address to sensor
 
+    log.info(f"Continious logging started with sample time {sample_time}s")
     while True:
         data = get_data_from_url(url)
         if data is None:

@@ -16,11 +16,10 @@ log = logging.getLogger(__name__)
 
 class ControlStrategy:
     @abc.abstractmethod
-
     def trigger(self) -> None:
         """function to trigger at intervall"""
         raise NotImplementedError()
-    
+
     @abc.abstractmethod
     def is_triggerable(self) -> bool:
         raise NotImplementedError()
@@ -55,9 +54,9 @@ class OffsetOutdoorTemperatureStrategy(ControlStrategy):
         self.offset = (
             self.indoor_temperature - self.setpoint_temperature
         ) * self.influence
-        self.rego.set_variable(ID.OUTDOOR_TEMP_OFFSET, self.offset)
+        self.rego.set_variable(ID.OUTDOOR_TEMP_OFFSET, round(self.offset*10))
         self.last_trigger = datetime.now()
-    
+
     def is_triggerable(self) -> bool:
         if self.last_trigger is None:
             # Never triggered and therefore can safely run
@@ -65,13 +64,11 @@ class OffsetOutdoorTemperatureStrategy(ControlStrategy):
         dt = datetime.now()
         if dt.hour > self.last_trigger.hour:
             return True
-        elif dt.day != self.last_trigger:
+        elif dt.day != self.last_trigger.day:
             # date have changed so trigger
             return True
-        
+
         return False
-
-
 
     def status(self) -> dict:
         return {
@@ -85,31 +82,31 @@ class StrategyHandler:
     def __init__(self) -> None:
         self.strategies: List[ControlStrategy] = []
         self.is_running: bool = False
-    
+
     def register_strategy(self, strategy: ControlStrategy) -> None:
         if not isinstance(strategy, ControlStrategy):
             raise TypeError(f"{strategy} not instance of {type(ControlStrategy)}")
         if strategy in self.strategies:
             log.info(f"Strategy {strategy} already registered")
             return
-        
+
         self.strategies.append(strategy)
-    
+
     def unregister_strategy(self, strategy: ControlStrategy) -> None:
         if strategy in self.strategies:
             self.strategies.remove(strategy)
-    
+
     def stop_strategies(self):
         # TODO: Need to reset Rego to original state
         self.is_running = False
-    
+
     def run_strategies(self):
         # TODO: Now as simple as possible
+        log.info(f"Strategies started")
         self.is_running = True
-        while self.is_runnig:
+        while self.is_running:
             time.sleep(1)
             for strategy in self.strategies:
                 if strategy.is_triggerable():
+                    log.info(f"Strategy {strategy} triggered")
                     strategy.trigger()
-
-

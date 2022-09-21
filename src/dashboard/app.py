@@ -1,32 +1,14 @@
 import logging
-import traceback
-import sys
-
-DEBUG = True
-HOST = "192.168.1.20"
-PORT = "80"
-
-# Setting up logging
-FORMAT = "%(asctime)s::%(levelname)s::%(name)s::%(message)s"
-logging.basicConfig(
-    level=logging.DEBUG, filename="log_dashboard.txt", filemode="w", format=FORMAT
-)
-log = logging.getLogger(__name__)
-
-# Logg all unhandled exceptions
-def exception_handler(*exc_info):
-    msg = "".join(traceback.format_exception(*exc_info))
-    log.exception(f"Unhandeled exception: {msg}")
-
-
-sys.excepthook = exception_handler
-
-from dash import Dash, dcc, html, Input, Output
 import enum
 import plotly.express as px
 from dashboard.data import load_data, Schema
+from dash import Dash, dcc, html, Input, Output
 from controller.storage import DATA_PATH  # Todo: Coupling that is unwanted
 
+HOST = "192.168.1.20"
+PORT = "80"
+
+log = logging.getLogger(__name__)
 
 
 class ID(str, enum.Enum):
@@ -59,5 +41,5 @@ def update_figure(_):
 
 
 if __name__ == "__main__":
+    DEBUG = True
     app.run(debug=DEBUG, host=HOST, port=PORT)
-

@@ -34,8 +34,8 @@ class Rego1000(H60):
             raise exceptions.NotWritableError(f"{idx} is a read-only variable.")
 
         if idx == ID_C30.OUTDOOR_TEMP_OFFSET:
-            # Only accepts values  within range of -10 to 10
-            value = clamp_value(value, -10, 10)
+            # Only accepts values  within range of -10 to 10 °C
+            value = clamp_value(value, -100, 100)
 
         super().set_variable(idx, value)
 
