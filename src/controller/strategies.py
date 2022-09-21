@@ -1,6 +1,12 @@
-from typing import Any, Callable, Optional
-from husdata.controllers import Rego1000
 import abc
+from datetime import datetime
+from typing import Any, Callable, Optional, List
+from husdata.controllers import Rego1000
+import time
+
+import logging
+
+log = logging.getLogger(__name__)
 
 # TODO:
 # Should be able to trigger at certain time intervalls or specific times
@@ -10,13 +16,19 @@ import abc
 
 class ControlStrategy:
     @abc.abstractmethod
-    def trigger(self):
+
+    def trigger(self) -> None:
         """function to trigger at intervall"""
+        raise NotImplementedError()
+    
+    @abc.abstractmethod
+    def is_triggerable(self) -> bool:
         raise NotImplementedError()
 
     @abc.abstractmethod
     def status(self) -> dict[str, Any]:
         """Method to deliver a status of the control strategy for easy overview and logging"""
+        raise NotImplementedError()
 
 
 class OffsetOutdoorTemperatureStrategy(ControlStrategy):
@@ -30,12 +42,13 @@ class OffsetOutdoorTemperatureStrategy(ControlStrategy):
     ) -> None:
         self.rego = rego
         self.get_indoor_temperature = indoor_temperature_callable
-        self.indoor_temperature: Optional[float] = None
-        self.setpoint_temperature: Optional[float] = None
         self.influence = influence
         self.offset = 0.0
+        self.indoor_temperature: Optional[float] = None
+        self.setpoint_temperature: Optional[float] = None
+        self.last_trigger: Optional[datetime] = None
 
-    def trigger(self):
+    def trigger(self) -> None:
         self.indoor_temperature = self.get_indoor_temperature()
         ID = self.rego.ID
         self.setpoint_temperature = self.rego.get_variable(ID.ROOM_TEMP_SETPOINT)
@@ -43,6 +56,22 @@ class OffsetOutdoorTemperatureStrategy(ControlStrategy):
             self.indoor_temperature - self.setpoint_temperature
         ) * self.influence
         self.rego.set_variable(ID.OUTDOOR_TEMP_OFFSET, self.offset)
+        self.last_trigger = datetime.now()
+    
+    def is_triggerable(self) -> bool:
+        if self.last_trigger is None:
+            # Never triggered and therefore can safely run
+            return True
+        dt = datetime.now()
+        if dt.hour > self.last_trigger.hour:
+            return True
+        elif dt.day != self.last_trigger:
+            # date have changed so trigger
+            return True
+        
+        return False
+
+
 
     def status(self) -> dict:
         return {
@@ -50,3 +79,37 @@ class OffsetOutdoorTemperatureStrategy(ControlStrategy):
             "setpoint_temperature": self.setpoint_temperature,
             "requested_offset": self.offset,
         }
+
+
+class StrategyHandler:
+    def __init__(self) -> None:
+        self.strategies: List[ControlStrategy] = []
+        self.is_running: bool = False
+    
+    def register_strategy(self, strategy: ControlStrategy) -> None:
+        if not isinstance(strategy, ControlStrategy):
+            raise TypeError(f"{strategy} not instance of {type(ControlStrategy)}")
+        if strategy in self.strategies:
+            log.info(f"Strategy {strategy} already registered")
+            return
+        
+        self.strategies.append(strategy)
+    
+    def unregister_strategy(self, strategy: ControlStrategy) -> None:
+        if strategy in self.strategies:
+            self.strategies.remove(strategy)
+    
+    def stop_strategies(self):
+        # TODO: Need to reset Rego to original state
+        self.is_running = False
+    
+    def run_strategies(self):
+        # TODO: Now as simple as possible
+        self.is_running = True
+        while self.is_runnig:
+            time.sleep(1)
+            for strategy in self.strategies:
+                if strategy.is_triggerable():
+                    strategy.trigger()
+
+
