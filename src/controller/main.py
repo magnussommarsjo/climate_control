@@ -58,8 +58,10 @@ def main():
     )
     strategy_thread.start()
 
-    app.app.run(port=app.PORT, debug=True)
-    #time.sleep(60)
+    app.app.run(port=app.PORT, debug=False)
+    # NOTE: Debug mode set to 'True' messes upp logging to csv files somehow.
+    # Related to threads?
+
 
 if __name__ == "__main__":
     main()
