@@ -27,7 +27,7 @@ from controller.strategies import StrategyHandler, OffsetOutdoorTemperatureStrat
 from controller.sensors import continious_logging, Sensor
 from controller.storage import CsvStorage
 
-SAMPLE_TIME = 10
+SAMPLE_TIME = 60
 H60_IP_ADDRESS = "192.168.1.12"
 
 
