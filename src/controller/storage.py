@@ -1,8 +1,10 @@
+from ast import List
 from pathlib import Path
 import datetime
 import csv
 import logging
 import abc
+from typing import Optional
 
 import controller.util as util
 
@@ -30,6 +32,8 @@ class CsvStorage(Storage):
 
         self.path = path
 
+        self.fieldnames: Optional[List[str]] = None
+
     def store(self, data: dict):
         """Stores the data in a CSV format by date"""
 
@@ -41,10 +45,17 @@ class CsvStorage(Storage):
 
         if not file_path.exists():
             with open(file_path, "w", newline="") as csv_file:
-                writer = csv.DictWriter(csv_file, fieldnames=flat_data.keys())
+                if self.fieldnames is None:
+                    self.fieldnames = list(flat_data.keys())
+                writer = csv.DictWriter(csv_file, fieldnames=self.fieldnames)
                 writer.writeheader()
                 writer.writerow(flat_data)
         else:
+            # First read fieldnames from file if not exist
+            if self.fieldnames is None:
+                with open(file_path, "r") as csv_file:
+                    csv_reader = csv.DictReader(csv_file)
+                    self.fieldnames = next(csv_reader.reader)
             with open(file_path, "a", newline="") as csv_file:
-                writer = csv.DictWriter(csv_file, fieldnames=flat_data.keys())
+                writer = csv.DictWriter(csv_file, fieldnames=self.fieldnames)
                 writer.writerow(flat_data)
