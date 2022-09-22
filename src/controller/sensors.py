@@ -1,5 +1,6 @@
+from ast import List
 import logging
-from typing import NoReturn, Optional
+from typing import Callable, NoReturn, Optional
 import time
 from datetime import datetime
 from controller.data_central import get_data_from_url
@@ -45,11 +46,11 @@ class Sensor:
         return f"{self.__class__.__name__}({name=}, {address=})"
 
 
-def continious_logging(sensor: Sensor, storage: Storage, sample_time: int = 10) -> NoReturn:
+def continious_logging(logging_function: Callable[[],dict], storage: Storage, sample_time: int = 10) -> NoReturn:
     log.info(f"Continious logging started with sample time {sample_time}s")
     while True:
-        if sensor.update():
-            data = sensor.to_dict()
+        data = logging_function()
+        if data:
             storage.store(data)
 
         time.sleep(sample_time)

@@ -1,8 +1,8 @@
 import logging
 import sys
-import time
 import traceback
 import threading
+from datetime import datetime
 
 
 # Setting up logging
@@ -33,18 +33,27 @@ H60_IP_ADDRESS = "192.168.1.12"
 
 def main():
     log.info("Main entrypoint started")
+
+    # Global objects used by multiple threds
     storage = CsvStorage()
     first_floor_sensor = Sensor(name="first_floor", address="192.168.1.21")
+    rego = Rego1000(H60_IP_ADDRESS)
+
+    def get_data_from_sensors() -> dict:
+        first_floor_sensor.update()
+        sensor_data = first_floor_sensor.to_dict()
+        rego_data = rego.get_all_data()
+        rego_data = Rego1000.translate_data(rego_data)
+        timestamp = datetime.now().isoformat()
+        return {"timestamp": timestamp, **sensor_data, **rego_data}
 
     logging_thread = threading.Thread(
         target=continious_logging,
-        args=(first_floor_sensor, storage, SAMPLE_TIME),
+        args=(get_data_from_sensors, storage, SAMPLE_TIME),
         daemon=True,
     )
-    logging_thread.start()
 
     # Setting up Control strategies
-    rego = Rego1000(H60_IP_ADDRESS)
     offset_strategy = OffsetOutdoorTemperatureStrategy(
         rego=rego,
         indoor_temperature_callable=lambda: first_floor_sensor.temperature,
@@ -56,9 +65,11 @@ def main():
     strategy_thread = threading.Thread(
         target=strategy_handler.run_strategies, daemon=True
     )
-    strategy_thread.start()
 
-    app.app.run(port=app.PORT, debug=False)
+    threads = [logging_thread, strategy_thread]
+    _ = [thread.start() for thread in threads]
+
+    app.app.run(host=app.HOST, port=app.PORT, debug=False)
     # NOTE: Debug mode set to 'True' messes upp logging to csv files somehow.
     # Related to threads?
 

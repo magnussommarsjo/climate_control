@@ -39,6 +39,10 @@ class Rego1000(H60):
 
         super().set_variable(idx, value)
 
+    @classmethod
+    def translate_data(cls, data: dict) -> dict:
+        return {id.name: data.get(id, None) for id in cls.ID}
+
 
 def main():
     controller = Rego1000("192.168.1.12")
