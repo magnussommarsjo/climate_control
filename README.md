@@ -1,5 +1,9 @@
 # Climate Control
-This repository supports controlling and monitoring the internal climate of a household utilizing custom climate sensors based on Raspberry Pi Pico W and a Heat-pump Controller from husdata.se
+This repository supports controlling and monitoring the internal climate of a household utilizing [custom climate sensors](./measurement_device/README.md) based on Raspberry Pi Pico W and a Heat-pump Controller from husdata.se
+
+Below is a schematic of the different components.  
+*Weather forecast and spot prices connection is not yet implemented*
+![](./attachments/schematics.PNG)
 
 This repo contains several sub-packages.
 - dashboard  
