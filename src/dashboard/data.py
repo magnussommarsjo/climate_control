@@ -14,7 +14,7 @@ def load_data(directory: str) -> pd.DataFrame:
     path = Path(directory)
     log.info(f"Loading of data at directory {path}")
     if not path.exists:
-        raise FileNotFoundError("Directory or file does not exixst")
+        raise FileNotFoundError("Directory or file does not exist")
 
     # Load data from all csv files
     all_files = list(path.glob("*.csv"))

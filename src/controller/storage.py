@@ -1,10 +1,9 @@
-from ast import List
 from pathlib import Path
 import datetime
 import csv
 import logging
 import abc
-from typing import Optional
+from typing import Optional, List
 
 import controller.util as util
 
@@ -20,6 +19,8 @@ class Storage(abc.ABC):
 
 
 class CsvStorage(Storage):
+    """Stores data in CSV files by date in defined directory"""
+
     def __init__(self, folder_path: str = DATA_PATH) -> None:
         path = Path(folder_path)
 

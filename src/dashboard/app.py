@@ -1,8 +1,10 @@
 import logging
 import enum
+
 import plotly.express as px
 from dashboard.data import load_data, Schema
 from dash import Dash, dcc, html, Input, Output
+
 from controller.storage import DATA_PATH  # Todo: Coupling that is unwanted
 
 HOST = "192.168.1.20"

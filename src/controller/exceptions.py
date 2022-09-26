@@ -1,3 +1,7 @@
+"""
+Custom exceptions for the controller package
+"""
+
 class StrategyError(Exception):
     pass
 

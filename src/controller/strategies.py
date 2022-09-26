@@ -1,38 +1,40 @@
 import abc
 from datetime import datetime
 from typing import Any, Callable, Optional, List
-from husdata.controllers import Rego1000
 import time
+
+from husdata.controllers import Rego1000
 
 import logging
 
 log = logging.getLogger(__name__)
 
-# TODO:
-# Should be able to trigger at certain time intervalls or specific times
-# Remember state and history
-# Use data from sensors and H60
 
+class ControlStrategy(abc.ABC):
+    """Abstract base class for defining a Control Strategy"""
 
-class ControlStrategy:
     @abc.abstractmethod
     def trigger(self) -> None:
-        """function to trigger at intervall"""
+        """Method to trigger at interval"""
         raise NotImplementedError()
 
     @abc.abstractmethod
     def is_triggerable(self) -> bool:
+        """If we can allow this strategy to be triggered"""
         raise NotImplementedError()
 
     @abc.abstractmethod
     def status(self) -> dict[str, Any]:
-        """Method to deliver a status of the control strategy for easy overview and logging"""
+        """
+        Method to deliver a status of the control strategy for easy overview and
+        logging
+        """
         raise NotImplementedError()
 
 
 class OffsetOutdoorTemperatureStrategy(ControlStrategy):
     """
-    This compensates sensed outdoor temperature based on a indoor temperature setpoint
+    This compensates sensed outdoor temperature based on a indoor temperature set-point
     and measured indoor temperature.
     """
 
@@ -54,7 +56,7 @@ class OffsetOutdoorTemperatureStrategy(ControlStrategy):
         self.offset = (
             self.indoor_temperature - self.setpoint_temperature
         ) * self.influence
-        self.rego.set_variable(ID.OUTDOOR_TEMP_OFFSET, round(self.offset*10))
+        self.rego.set_variable(ID.OUTDOOR_TEMP_OFFSET, round(self.offset * 10))
         self.last_trigger = datetime.now()
 
     def is_triggerable(self) -> bool:
@@ -79,6 +81,8 @@ class OffsetOutdoorTemperatureStrategy(ControlStrategy):
 
 
 class StrategyHandler:
+    """Handles lifetime of strategy"""
+
     def __init__(self) -> None:
         self.strategies: List[ControlStrategy] = []
         self.is_running: bool = False
@@ -101,7 +105,6 @@ class StrategyHandler:
         self.is_running = False
 
     def run_strategies(self):
-        # TODO: Now as simple as possible
         log.info(f"Strategies started")
         self.is_running = True
         while self.is_running:

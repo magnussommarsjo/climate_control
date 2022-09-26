@@ -2,7 +2,7 @@ import httpx
 import json
 from typing import Any, Optional
 import logging
-import husdata.exeptions as exceptions
+import husdata.exceptions as exceptions
 from .registers import DataType, isDataType
 
 log = logging.getLogger(__name__)
@@ -26,9 +26,9 @@ class H60:
 
     @staticmethod
     def _convert_raw_value(idx: str, value: str) -> Any:
-        """Converts raw value from H60 to its propper data type
+        """Converts raw value from H60 to its proper data type
 
-        Convcersion based on H1 developer manual but modified to work with Regoo 1000
+        Conversion based on H1 developer manual but modified to work with Rego 1000
         IVT Greenline
 
         Args:

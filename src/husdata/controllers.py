@@ -1,7 +1,7 @@
 import logging
 
 from husdata.registers import ID_C30
-import husdata.exeptions as exceptions
+import husdata.exceptions as exceptions
 from husdata.gateway import H60
 from husdata.util import print_data, clamp_value
 
