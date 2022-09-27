@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - 8080:80
+    environment:
+      HOST: "0.0.0.0"
+      PORT: 80
+    volumes:
+      - app-data:/climate_control/data/
+
+volumes:
+  app-data:

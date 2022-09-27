@@ -8,6 +8,7 @@ Main script that starts all threads and processes.
 """
 
 import logging
+import os
 import sys
 import traceback
 import threading
@@ -38,6 +39,8 @@ from controller.storage import CsvStorage
 
 SAMPLE_TIME = 60
 H60_IP_ADDRESS = "192.168.1.12"
+HOST = os.getenv("HOST", "0.0.0.0")
+PORT = os.getenv("PORT", 80)
 
 
 def main():
@@ -84,7 +87,7 @@ def main():
     _ = [thread.start() for thread in threads]
 
     # Start the dashboard application server
-    app.app.run(host="0.0.0.0", port=app.PORT, debug=False)
+    app.app.run(host=HOST, port=PORT, debug=False)
     # NOTE: Debug mode set to 'True' messes upp logging to csv files somehow.
     # Related to threads?
 
