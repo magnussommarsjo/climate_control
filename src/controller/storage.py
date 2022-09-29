@@ -9,7 +9,7 @@ import controller.util as util
 
 log = logging.getLogger(__name__)
 
-DATA_PATH = Path(__file__).parents[2].joinpath("data").resolve()
+DATA_PATH = Path(__file__).cwd().joinpath("data").resolve()
 
 
 class Storage(abc.ABC):

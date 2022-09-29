@@ -5,9 +5,11 @@ services:
     build: .
     ports:
       - 8080:80
+    working_dir: /climate_control
     environment:
       HOST: "0.0.0.0"
       PORT: 80
+      TZ: Europe/Stockholm
     volumes:
       - app-data:/climate_control/data/
 
