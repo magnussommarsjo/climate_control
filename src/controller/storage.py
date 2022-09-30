@@ -5,6 +5,8 @@ import logging
 import abc
 from typing import Optional, List
 
+from influxdb_client import InfluxDBClient, Point
+
 import controller.util as util
 
 log = logging.getLogger(__name__)
@@ -16,6 +18,24 @@ class Storage(abc.ABC):
     @abc.abstractmethod
     def store(self, data: dict) -> None:
         raise NotImplementedError()
+
+
+class InfluxStorage(Storage):
+    def __init__(self, address: str, port: str, token: str, org: str, bucket: str):
+        self.url = f"http://{address}:{port}"
+        self.token = token
+        self.org = org
+        self.bucket = bucket
+
+    def store(self, data: dict) -> None:
+
+        with InfluxDBClient(url=self.url, token=self.token, org=self.org) as client:
+
+            points = [
+                Point("Sensor-data").field(key, value).time(datetime.datetime.utcnow())
+                for key, value in util.flatten_dict(data).items()
+            ]
+            client.write_api().write(self.bucket, points)
 
 
 class CsvStorage(Storage):
