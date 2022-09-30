@@ -30,7 +30,16 @@ starting the controller by and dashboard using command
 ```sh
 python {path to cloned directory}/src/controller/main.py
 ```
-The main script most likely needs to be modified for your specific setup. 
+The main script most likely needs to be modified for your specific setup.
+
+### Using Docker
+If you are using `docker` and `docker-compose` you can install and deploy everything with a single command.  
+When `cd` into your cloned repository: 
+```bash
+docker compose up -d
+```
+This will download everything, build the docker image and deploy it. It will also set up a persistent volume for the data logging.
+More information on docker [here](https://www.docker.com/).
 
 ### Raspberry Pi
 When installing and running on raspberry pi, you have to change the boot config to wait for network connection before proceeding with boot. Otherwise the script will fail. This can be done in `sudo raspi-config`
