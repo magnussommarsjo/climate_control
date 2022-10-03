@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+import enum
+from typing import Optional, List
 import pandas as pd
 from pathlib import Path
 import logging
@@ -11,38 +15,57 @@ class Schema:
     VALUE = "value"
 
 
-COLUMNS = [
-    "timestamp",
-    "first_floor.temperature",
-    "first_floor.humidity",
-    "RADIATOR_FORWARD",
-    "HEAT_CARRIER_RETURN",
-    "HEAT_CARRIER_FORWARD",
-    "BRINE_IN_EVAPORATOR",
-    "BRINE_OUT_CONDENSER",
-    "OUTDOOR",
-    "WARM_WATER_1_TOP",
-    "HOT_GAS_COMPRESSOR",
-    "COMPRESSOR",
-    "PUMP_COLD_CIRCUIT",
-    "PUMP_HEAT_CIRCUIT",
-    "PUMP_RADIATOR",
-    "SWITCH_VALVE_1",
-    "SWITCH_VALVE_2",
-    "HEATING_SETPOINT",
-    "ROOM_TEMP_SETPOINT",
-    "EXTRA_WARM_WATER",
-    "OUTDOOR_TEMP_OFFSET",
-    "SUPP_ENERGY_HEATING",
-    "SUPP_ENERGY_HOTWATER",
-    "COMPR_CONS_HEATING",
-    "COMPR_CONS_HOTWATER",
-    "AUX_CONS_HEATING",
-    "AUX_CONS_HOTWATER",
-]
+class Categories(str, enum.Enum):
+    TIMESTAMP = "timestamp"
+    TEMPERATURE_FIRST_FLOOR = "first_floor.temperature"
+    HUMIDITY_FIRST_FLOOR = "first_floor.humidity"
+    RADIATOR_FORWARD = "RADIATOR_FORWARD"
+    HEAT_CARRIER_RETURN = "HEAT_CARRIER_RETURN"
+    HEAT_CARRIER_FORWARD = "HEAT_CARRIER_FORWARD"
+    BRINE_IN_EVAPORATOR = "BRINE_IN_EVAPORATOR"
+    BRINE_OUT_CONDENSER = "BRINE_OUT_CONDENSER"
+    OUTDOOR = "OUTDOOR"
+    WARM_WATER_1_TOP = "WARM_WATER_1_TOP"
+    HOT_GAS_COMPRESSOR = "HOT_GAS_COMPRESSOR"
+    COMPRESSOR = "COMPRESSOR"
+    PUMP_COLD_CIRCUIT = "PUMP_COLD_CIRCUIT"
+    PUMP_HEAT_CIRCUIT = "PUMP_HEAT_CIRCUIT"
+    PUMP_RADIATOR = "PUMP_RADIATOR"
+    SWITCH_VALVE_1 = "SWITCH_VALVE_1"
+    SWITCH_VALVE_2 = "SWITCH_VALVE_2"
+    HEATING_SETPOINT = "HEATING_SETPOINT"
+    ROOM_TEMP_SETPOINT = "ROOM_TEMP_SETPOINT"
+    EXTRA_WARM_WATER = "EXTRA_WARM_WATER"
+    OUTDOOR_TEMP_OFFSET = "OUTDOOR_TEMP_OFFSET"
+    SUPP_ENERGY_HEATING = "SUPP_ENERGY_HEATING"
+    SUPP_ENERGY_HOTWATER = "SUPP_ENERGY_HOTWATER"
+    COMPR_CONS_HEATING = "COMPR_CONS_HEATING"
+    COMPR_CONS_HOTWATER = "COMPR_CONS_HOTWATER"
+    AUX_CONS_HEATING = "AUX_CONS_HEATING"
+    AUX_CONS_HOTWATER = "AUX_CONS_HOTWATER"
 
 
-def load_data(directory: str) -> pd.DataFrame:
+COLUMNS = [cat.value for cat in Categories]
+
+
+class Data:
+    def __init__(self, df: pd.DataFrame) -> None:
+        self._df = df
+
+    def to_df(self) -> pd.DataFrame:
+        return self._df
+    
+    def filter(self, categories: List[Categories]) -> Data:
+        idx = self._df[Schema.CATEGORY].isin(categories)
+        return Data(self._df[idx])
+
+
+    def get_latest_value(self, category: Categories) -> float:
+        df = self._df
+        return df[df[Schema.CATEGORY] == category][Schema.VALUE].to_list()[-1]
+
+
+def load_data(directory: str, columns: Optional[List[str]] = None) -> Data:
     path = Path(directory)
     log.info(f"Loading of data at directory {path}")
     if not path.exists:
@@ -64,19 +87,26 @@ def load_data(directory: str) -> pd.DataFrame:
 
     # Convert datatypes
     df[Schema.TIME] = pd.to_datetime(df[Schema.TIME])
-    df[Schema.CATEGORY] = df[Schema.CATEGORY].astype("category")
+    # df[Schema.CATEGORY] = df[Schema.CATEGORY].astype("category") # Category creates issues when filtering
     log.info("Loading data finished")
 
-    return df
+    return Data(df)
 
 
 def main():
     from controller.storage import DATA_PATH
 
-    df = load_data(DATA_PATH)
+    data = load_data(DATA_PATH)
+    df = data.to_df()
     print(df.head())
     print(df.columns)
     print(df.dtypes)
+
+    data.get_latest_value(Categories.TEMPERATURE_FIRST_FLOOR)
+
+    df2 = data.filter([Categories.TEMPERATURE_FIRST_FLOOR, Categories.OUTDOOR])
+
+    print(df2)
 
 
 if __name__ == "__main__":
