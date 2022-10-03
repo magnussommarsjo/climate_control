@@ -84,7 +84,7 @@ def main():
     _ = [thread.start() for thread in threads]
 
     # Start the dashboard application server
-    app.app.run(host=app.HOST, port=app.PORT, debug=False)
+    app.app.run(host="0.0.0.0", port=80, debug=False)
     # NOTE: Debug mode set to 'True' messes upp logging to csv files somehow.
     # Related to threads?
 
