@@ -2,11 +2,15 @@ import logging
 import enum
 
 import plotly.express as px
-from dashboard.data import load_data, Schema
 from dash import Dash, dcc, html, Input, Output
 from dash.exceptions import PreventUpdate
+import dash_bootstrap_components as dbc
+from dash_bootstrap_templates import load_figure_template
 
-from controller.storage import DATA_PATH  # Todo: Coupling that is unwanted
+from dashboard.data import load_data, Schema
+from controller.storage import DATA_PATH  
+# Todo: Coupling that is unwanted
+# Maybe wrap the app varaible creation in an function? How then do with @callbacks?
 
 HOST = "192.168.1.20"
 PORT = "80"
@@ -18,18 +22,18 @@ class ID(str, enum.Enum):
     MAIN_GRAPH = "main_graph"
     UPDATE_BUTTON = "update_button"
 
-
-app = Dash(__name__)
+load_figure_template("darkly")
+app = Dash(__name__, external_stylesheets=[dbc.themes.DARKLY, dbc.icons.BOOTSTRAP])
 
 app.layout = html.Div(
     [
         html.H1("Home Climate dashboard"),
         html.Div(
             [
-                html.Button("Update", id=ID.UPDATE_BUTTON),
-                html.Button("Other"),
-                html.Button("Nav"),
-                html.Button("Buttons"),
+                dbc.Button("Update", id=ID.UPDATE_BUTTON),
+                dbc.Button("Other"),
+                dbc.Button("Nav"),
+                dbc.Button("Buttons"),
             ],
             id="navigtion_pane",
         ),

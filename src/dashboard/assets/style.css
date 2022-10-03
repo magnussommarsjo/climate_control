@@ -1,37 +1,3 @@
-body {
-    background-color: white;
-}
-
-h1 {
-    text-transform: capitalize;
-    text-align: center;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
 button {
-    width: 240px;
-    height: 40px;
-    margin-top: 5px;
-    margin-bottom: 5px;
-    cursor: pointer;
-    border: 0px;
-    border-radius: 10px;
-    background-color: black;
-    color: white;
-    text-transform: uppercase;
-    font-size: 15px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin-left: 10px;
-}
-
-button:hover {
-    font-weight: bold;
-    height: 50px;
-    margin-top: 0px;
-    margin-bottom: 0px;
-}
-
-
-#navigation_pane {
-    
+    margin-left: 5px;
 }
