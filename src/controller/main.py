@@ -11,6 +11,7 @@ import logging
 import sys
 import traceback
 import threading
+import time
 from datetime import datetime
 
 
@@ -42,6 +43,7 @@ H60_IP_ADDRESS = "192.168.1.12"
 
 def main():
     log.info("Main entrypoint started")
+    time.sleep(60)
 
     # Global objects used by multiple threads
     storage = CsvStorage()
