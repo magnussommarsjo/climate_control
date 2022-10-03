@@ -4,6 +4,7 @@ import enum
 import plotly.express as px
 from dashboard.data import load_data, Schema
 from dash import Dash, dcc, html, Input, Output
+from dash.exceptions import PreventUpdate
 
 from controller.storage import DATA_PATH  # Todo: Coupling that is unwanted
 
@@ -44,6 +45,9 @@ app.layout = html.Div(
 )
 def update_figure(_):
     data = load_data(DATA_PATH)
+    if data is None:
+        raise PreventUpdate("No data to load")
+
     log.info("Updating figure")
     fig = px.line(data, x=Schema.TIME, y=Schema.VALUE, color=Schema.CATEGORY)
     fig.update_layout(title="Sensor values", xaxis_title="Time", yaxis_title="Value")
@@ -52,4 +56,5 @@ def update_figure(_):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=80)
+    app.run(debug=True, host="0.0.0.0", port=8000)
+    # Hosting on port 80 could cause troubles. Only use for production. 

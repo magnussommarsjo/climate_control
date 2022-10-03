@@ -54,6 +54,9 @@ def load_data(directory: str) -> pd.DataFrame:
     all_files.sort()
     data_files = [pd.read_csv(filename) for filename in all_files[-2:]]
 
+    if not data_files:
+        return None
+
     # Concatenate data and transform to long format
     df = pd.concat(data_files, axis=0, ignore_index=True)
     df = df[COLUMNS]
