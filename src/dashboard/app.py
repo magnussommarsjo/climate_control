@@ -23,9 +23,18 @@ app = Dash(__name__)
 app.layout = html.Div(
     [
         html.H1("Home Climate dashboard"),
-        html.Button("Update", id=ID.UPDATE_BUTTON),
-        dcc.Graph(id=ID.MAIN_GRAPH),
-    ]
+        html.Div(
+            [
+                html.Button("Update", id=ID.UPDATE_BUTTON),
+                html.Button("Other"),
+                html.Button("Nav"),
+                html.Button("Buttons"),
+            ],
+            id="navigtion_pane",
+        ),
+        html.Div([dcc.Graph(id=ID.MAIN_GRAPH)], id="chart_pane"),
+    ],
+    id="main_div",
 )
 
 
@@ -43,5 +52,4 @@ def update_figure(_):
 
 
 if __name__ == "__main__":
-    DEBUG = True
-    app.run(debug=DEBUG, host=HOST, port=PORT)
+    app.run(debug=True, host="0.0.0.0", port=80)
