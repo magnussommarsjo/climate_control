@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pathlib import Path
 import datetime
 import csv
@@ -21,6 +23,70 @@ class Storage(abc.ABC):
         raise NotImplementedError()
 
 
+# from(bucket: "bucket")
+#   |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+#   |> filter(fn: (r) => r["_measurement"] == "Test")
+#   |> filter(fn: (r) => r["location"] == "home")
+#   |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)
+#   |> yield(name: "mean")
+class QueryBuilder:
+    """InfluxDB Query builder"""
+
+    def __init__(self) -> None:
+        self._query: List[str] = []
+        self._has_bucket = False
+        self._has_range = False
+
+    def bucket(self, name: str) -> QueryBuilder:
+        if self._has_bucket:
+            raise DuplicateQueryError("Query already has a call with bucket source")
+
+        self._query.append(f'from(bucket: "{name}")')
+        self._has_bucket=True
+        return self
+
+    def range(self, start: str, stop: Optional[str] = None) -> QueryBuilder:
+        """
+        https://docs.influxdata.com/influxdb/cloud/query-data/get-started/query-influxdb/#2-specify-a-time-range
+        """
+        query = f'range(start: {start}'
+        if stop:
+            query += f', stop: {stop}'
+        query += ')'
+
+        self._query.append(query)
+        self._has_range = True
+        return self
+    
+    def filter(self, key: str, value: str) -> QueryBuilder:
+        self._query.append(f'filter(fn: (r) => r["{key}"] == "{value}")')
+        return self
+    
+    def measurement(self, name: str) -> QueryBuilder:
+        return self.filter("_measurement", name)
+
+
+    def build(self, validate=True) -> str:
+        if  validate:
+            if not self._has_bucket:
+                raise MissingQueryError("Missing bucket")
+
+            if not self._has_range:
+                raise MissingQueryError("Missing range in query")
+        
+        self._query.append('yield()')
+
+        return "\n  |> ".join(self._query)
+    
+    def __str__(self) -> str:
+        return self.build(validate=False)
+
+class MissingQueryError(Exception):
+    pass
+
+class DuplicateQueryError(Exception):
+    pass
+
 class InfluxStorage(Storage):
     def __init__(self, address: str, port: str, token: str, org: str, bucket: str):
         self.url = f"http://{address}:{port}"
@@ -35,12 +101,10 @@ class InfluxStorage(Storage):
         with InfluxDBClient(url=self.url, token=self.token, org=self.org) as client:
 
             points = [
-                Point(measurement)
-                .field(key, value)
-                .time(datetime.datetime.utcnow())
+                Point(measurement).field(key, value).time(datetime.datetime.utcnow())
                 for key, value in util.flatten_dict(data).items()
             ]
-            
+
             for point in points:
                 for tag in tags:
                     point.tag(tag[0], tag[1])
