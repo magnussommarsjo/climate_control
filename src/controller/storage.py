@@ -3,9 +3,10 @@ import datetime
 import csv
 import logging
 import abc
-from typing import Optional, List
+from typing import Optional, List, Tuple
 
 from influxdb_client import InfluxDBClient, Point
+from influxdb_client.client.write_api import SYNCHRONOUS
 
 import controller.util as util
 
@@ -27,15 +28,26 @@ class InfluxStorage(Storage):
         self.org = org
         self.bucket = bucket
 
-    def store(self, data: dict) -> None:
+    def store(
+        self, measurement: str, data: dict, tags: Optional[List[Tuple[str, str]]] = None
+    ) -> None:
 
         with InfluxDBClient(url=self.url, token=self.token, org=self.org) as client:
 
             points = [
-                Point("Sensor-data").field(key, value).time(datetime.datetime.utcnow())
+                Point(measurement)
+                .field(key, value)
+                .time(datetime.datetime.utcnow())
                 for key, value in util.flatten_dict(data).items()
             ]
-            client.write_api().write(self.bucket, points)
+            
+            for point in points:
+                for tag in tags:
+                    point.tag(tag[0], tag[1])
+
+            client.write_api(write_options=SYNCHRONOUS).write(
+                bucket=self.bucket, record=points
+            )
 
 
 class CsvStorage(Storage):
