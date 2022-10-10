@@ -12,6 +12,21 @@ services:
       TZ: Europe/Stockholm
     volumes:
       - app-data:/climate_control/data/
+  influxdb2:
+    image: influxdb:2.4
+    ports:
+      - 8086:8086
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_ORG: climate-control
+      DOCKER_INFLUXDB_INIT_BUCKET: climate-control
+      # Add below to an .env file or directly in shell env variables
+      DOCKER_INFLUXDB_INIT_USERNAME: ${DOCKER_INFLUXDB_INIT_USERNAME}
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${DOCKER_INFLUXDB_INIT_PASSWORD}
+    volumes:
+      - influxdb2:/var/lib/influxdb2
+
 
 volumes:
   app-data:
+  influxdb2:
