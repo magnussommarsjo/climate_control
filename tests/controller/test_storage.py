@@ -1,6 +1,7 @@
 from controller.storage import InfluxStorage, QueryBuilder
 import pytest
 import os
+import pandas as pd
 
 
 @pytest.fixture
@@ -46,6 +47,10 @@ def test_influxdb():
         data=data_to_write,
         tags=[("location", "home"), ("type", "test")],
     )
+
+    df = influx_storage.read()
+    assert isinstance(df, pd.DataFrame)
+    assert df.empty == False
 
 
 def test_query_builder():

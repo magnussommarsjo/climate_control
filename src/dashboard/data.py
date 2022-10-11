@@ -1,6 +1,11 @@
 import pandas as pd
 from pathlib import Path
 import logging
+import os
+from controller.storage import (
+    InfluxStorage,
+    QueryBuilder,
+)  # Todo: Coupling that is unwanted
 
 log = logging.getLogger(__name__)
 
@@ -10,7 +15,7 @@ class Schema:
     VALUE = "value"
 
 
-def load_data(directory: str) -> pd.DataFrame:
+def load_data_from_csv(directory: str) -> pd.DataFrame:
     path = Path(directory)
     log.info(f"Loading of data at directory {path}")
     if not path.exists:
@@ -28,14 +33,32 @@ def load_data(directory: str) -> pd.DataFrame:
 
     # Convert datatypes
     df[Schema.TIME] = pd.to_datetime(df[Schema.TIME])
-    df[Schema.CATEGORY] = df[Schema.CATEGORY].astype("category")
     log.info("Loading data finished")
 
     return df
 
+def load_data_from_database() -> pd.DataFrame:
+    influx_storeage = InfluxStorage(
+        adderss="localhost",
+        port=8086,
+        token=os.getenv("DOCKER_INFLUXDB_INIT_ADMIN_TOKEN"),
+        org="climate-control",
+        bucket=os.getenv("DOCKER_INFLUXDB_INIT_BUCKET", "climate-control"),
+    )
+
+    df = influx_storeage.read()
+    df = df.rename(columns={
+        "_time": Schema.TIME,
+        "_field": Schema.CATEGORY,
+        "_value": Schema.VALUE
+    })
+    df = df[[Schema.TIME, Schema.CATEGORY, Schema.VALUE]]
+    return df
+
+
 
 def main():
-    df = load_data("")
+    df = load_data_from_csv("")
     print(df.head())
     print(df.columns)
     print(df.dtypes)

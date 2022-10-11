@@ -2,10 +2,10 @@ import logging
 import enum
 
 import plotly.express as px
-from dashboard.data import load_data, Schema
+from dashboard.data import load_data_from_database, Schema
 from dash import Dash, dcc, html, Input, Output
 
-from controller.storage import DATA_PATH  # Todo: Coupling that is unwanted
+
 
 HOST = "192.168.1.20"
 PORT = "80"
@@ -34,7 +34,8 @@ app.layout = html.Div(
     Input(ID.UPDATE_BUTTON, "n_clicks"),
 )
 def update_figure(_):
-    data = load_data(DATA_PATH)
+
+    data = load_data_from_database()
     log.info("Updating figure")
     fig = px.line(data, x=Schema.TIME, y=Schema.VALUE, color=Schema.CATEGORY)
     fig.update_layout(title="Sensor values", xaxis_title="Time", yaxis_title="Value")

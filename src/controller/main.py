@@ -35,7 +35,7 @@ from dashboard import app
 from husdata.controllers import Rego1000
 from controller.strategies import StrategyHandler, OffsetOutdoorTemperatureStrategy
 from controller.sensors import continuous_logging, Sensor
-from controller.storage import CsvStorage
+from controller.storage import InfluxStorage
 
 SAMPLE_TIME = 60
 H60_IP_ADDRESS = "192.168.1.12"
@@ -47,7 +47,12 @@ def main():
     log.info("Main entrypoint started")
 
     # Global objects used by multiple threads
-    storage = CsvStorage()
+    storage = InfluxStorage(
+        address='localhost',
+        port=8086,
+        token=os.getenv("DOCKER_INFLUXDB_INIT_ADMIN_TOKEN"),
+        bucket=os.getenv("DOCKER_INFLUXDB_INIT_BUCKET", "climate-control")
+    )
     first_floor_sensor = Sensor(name="first_floor", address="192.168.1.21")
     rego = Rego1000(H60_IP_ADDRESS)
 
@@ -83,7 +88,10 @@ def main():
 
     # Start all threads. These are 'daemon threads and will be killed as soon as
     # main thread ends. In this case it will be when the dashboard server is closed.
-    threads = [logging_thread, strategy_thread]
+    threads = [
+        logging_thread, 
+        # strategy_thread
+    ]
     _ = [thread.start() for thread in threads]
 
     # Start the dashboard application server
