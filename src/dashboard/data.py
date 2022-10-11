@@ -38,15 +38,18 @@ def load_data_from_csv(directory: str) -> pd.DataFrame:
     return df
 
 def load_data_from_database() -> pd.DataFrame:
-    influx_storeage = InfluxStorage(
-        adderss="localhost",
+    influx_storage = InfluxStorage(
+        address="influxdb2",
         port=8086,
-        token=os.getenv("DOCKER_INFLUXDB_INIT_ADMIN_TOKEN"),
+        token=os.getenv("INFLUXDB_TOKEN"),
         org="climate-control",
-        bucket=os.getenv("DOCKER_INFLUXDB_INIT_BUCKET", "climate-control"),
+        bucket="climate-control",
     )
 
-    df = influx_storeage.read()
+    df = influx_storage.read()
+    if df.empty:
+        return None
+        
     df = df.rename(columns={
         "_time": Schema.TIME,
         "_field": Schema.CATEGORY,

@@ -4,6 +4,7 @@ import enum
 import plotly.express as px
 from dashboard.data import load_data_from_database, Schema
 from dash import Dash, dcc, html, Input, Output
+from dash.exceptions import PreventUpdate
 
 
 
@@ -36,6 +37,9 @@ app.layout = html.Div(
 def update_figure(_):
 
     data = load_data_from_database()
+    if data is None:
+        raise PreventUpdate()
+        
     log.info("Updating figure")
     fig = px.line(data, x=Schema.TIME, y=Schema.VALUE, color=Schema.CATEGORY)
     fig.update_layout(title="Sensor values", xaxis_title="Time", yaxis_title="Value")

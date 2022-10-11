@@ -106,9 +106,10 @@ class InfluxStorage(Storage):
                 for key, value in util.flatten_dict(data).items()
             ]
 
-            for point in points:
-                for tag in tags:
-                    point.tag(tag[0], tag[1])
+            if tags:
+                for point in points:
+                    for tag in tags:
+                        point.tag(tag[0], tag[1])
 
             with client.write_api(write_options=SYNCHRONOUS) as write_api:
                 write_api.write(bucket=self.bucket, record=points)

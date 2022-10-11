@@ -10,6 +10,7 @@ services:
       HOST: "0.0.0.0"
       PORT: 80
       TZ: Europe/Stockholm
+      INFLUXDB_TOKEN: ${DOCKER_INFLUXDB_INIT_ADMIN_TOKEN}
     volumes:
       - app-data:/climate_control/data/
     depends_on: 

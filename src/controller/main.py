@@ -22,6 +22,12 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
+# Log to console as well. 
+consoleHandler = logging.StreamHandler()
+logFormatter = logging.Formatter(FORMAT)
+consoleHandler.setFormatter(logFormatter)
+log.addHandler(consoleHandler)
+
 # Logg all unhandled exceptions
 def exception_handler(*exc_info):
     msg = "".join(traceback.format_exception(*exc_info))
@@ -48,10 +54,12 @@ def main():
 
     # Global objects used by multiple threads
     storage = InfluxStorage(
-        address='localhost',
+        address='influxdb2',
         port=8086,
-        token=os.getenv("DOCKER_INFLUXDB_INIT_ADMIN_TOKEN"),
-        bucket=os.getenv("DOCKER_INFLUXDB_INIT_BUCKET", "climate-control")
+        token=os.getenv("INFLUXDB_TOKEN"),
+        org="climate-control",
+        bucket="climate-control",
+
     )
     first_floor_sensor = Sensor(name="first_floor", address="192.168.1.21")
     rego = Rego1000(H60_IP_ADDRESS)
@@ -90,7 +98,7 @@ def main():
     # main thread ends. In this case it will be when the dashboard server is closed.
     threads = [
         logging_thread, 
-        # strategy_thread
+        strategy_thread
     ]
     _ = [thread.start() for thread in threads]
 
