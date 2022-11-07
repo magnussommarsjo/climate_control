@@ -30,7 +30,7 @@ services:
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${DOCKER_INFLUXDB_INIT_ADMIN_TOKEN}
     volumes:
       - influxdb2:/var/lib/influxdb2
-    restart: unless-stoped
+    restart: unless-stopped
 
 
 volumes:
