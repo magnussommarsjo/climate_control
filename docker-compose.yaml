@@ -15,7 +15,7 @@ services:
       - app-data:/climate_control/data/
     depends_on: 
       - "influxdb2"
-    restart: unless-stoped
+    restart: unless-stopped
   influxdb2:
     image: influxdb:2.4
     ports:
