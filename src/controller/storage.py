@@ -5,7 +5,7 @@ import datetime
 import csv
 import logging
 import abc
-from typing import Optional, List, Tuple
+from typing import Optional, List, Protocol, Tuple
 
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
@@ -18,10 +18,10 @@ log = logging.getLogger(__name__)
 DATA_PATH = Path(__file__).cwd().joinpath("data").resolve()
 
 
-class Storage(abc.ABC):
-    @abc.abstractmethod
+
+class Storage(Protocol):
     def store(self, data: dict) -> None:
-        raise NotImplementedError()
+        ...
 
 
 # from(bucket: "bucket")
@@ -88,7 +88,7 @@ class MissingQueryError(Exception):
 class DuplicateQueryError(Exception):
     pass
 
-class InfluxStorage(Storage):
+class InfluxStorage:
     def __init__(self, address: str, port: str, token: str, org: str, bucket: str):
         self.url = f"http://{address}:{port}"
         self.token = token
@@ -131,7 +131,7 @@ class InfluxStorage(Storage):
         return response
 
 
-class CsvStorage(Storage):
+class CsvStorage:
     """Stores data in CSV files by date in defined directory"""
 
     def __init__(self, folder_path: str = DATA_PATH) -> None:
