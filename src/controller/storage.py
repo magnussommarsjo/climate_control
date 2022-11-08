@@ -4,7 +4,6 @@ from pathlib import Path
 import datetime
 import csv
 import logging
-import abc
 from typing import Optional, List, Protocol, Tuple
 
 from influxdb_client import InfluxDBClient, Point
@@ -18,18 +17,11 @@ log = logging.getLogger(__name__)
 DATA_PATH = Path(__file__).cwd().joinpath("data").resolve()
 
 
-
 class Storage(Protocol):
     def store(self, data: dict) -> None:
         ...
 
 
-# from(bucket: "bucket")
-#   |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
-#   |> filter(fn: (r) => r["_measurement"] == "Test")
-#   |> filter(fn: (r) => r["location"] == "home")
-#   |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)
-#   |> yield(name: "mean")
 class QueryBuilder:
     """InfluxDB Query builder"""
 
@@ -43,50 +35,52 @@ class QueryBuilder:
             raise DuplicateQueryError("Query already has a call with bucket source")
 
         self._query.append(f'from(bucket: "{name}")')
-        self._has_bucket=True
+        self._has_bucket = True
         return self
 
     def range(self, start: str, stop: Optional[str] = None) -> QueryBuilder:
         """
         https://docs.influxdata.com/influxdb/cloud/query-data/get-started/query-influxdb/#2-specify-a-time-range
         """
-        query = f'range(start: {start}'
+        query = f"range(start: {start}"
         if stop:
-            query += f', stop: {stop}'
-        query += ')'
+            query += f", stop: {stop}"
+        query += ")"
 
         self._query.append(query)
         self._has_range = True
         return self
-    
+
     def filter(self, key: str, value: str) -> QueryBuilder:
         self._query.append(f'filter(fn: (r) => r["{key}"] == "{value}")')
         return self
-    
+
     def measurement(self, name: str) -> QueryBuilder:
         return self.filter("_measurement", name)
 
-
     def build(self, validate=True) -> str:
-        if  validate:
+        if validate:
             if not self._has_bucket:
                 raise MissingQueryError("Missing bucket")
 
             if not self._has_range:
                 raise MissingQueryError("Missing range in query")
-        
-        self._query.append('yield()')
+
+        self._query.append("yield()")
 
         return "\n  |> ".join(self._query)
-    
+
     def __str__(self) -> str:
         return self.build(validate=False)
+
 
 class MissingQueryError(Exception):
     pass
 
+
 class DuplicateQueryError(Exception):
     pass
+
 
 class InfluxStorage:
     def __init__(self, address: str, port: str, token: str, org: str, bucket: str):
@@ -96,7 +90,10 @@ class InfluxStorage:
         self.bucket = bucket
 
     def store(
-        self, data: dict, measurement: str = "default",  tags: Optional[List[Tuple[str, str]]] = None
+        self,
+        data: dict,
+        measurement: str = "default",
+        tags: Optional[List[Tuple[str, str]]] = None,
     ) -> None:
 
         with InfluxDBClient(url=self.url, token=self.token, org=self.org) as client:
@@ -113,9 +110,9 @@ class InfluxStorage:
 
             with client.write_api(write_options=SYNCHRONOUS) as write_api:
                 write_api.write(bucket=self.bucket, record=points)
-    
+
     def read(self, query: Optional[str] = None) -> pd.DataFrame:
-        """Query the influx database and return a dataframe. 
+        """Query the influx database and return a dataframe.
         If no query is specified then return everything from the bucket the past 24h
         """
         if query is None:
@@ -124,11 +121,17 @@ class InfluxStorage:
 
         with InfluxDBClient(url=self.url, token=self.token, org=self.org) as client:
             response = client.query_api().query_data_frame(query)
-        
+
         if isinstance(response, list):
             response = pd.concat(response)
 
         return response
+
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}"
+            f"(url={self.url}, org={self.org}, bucket={self.bucket}, token=...)"
+        )
 
 
 class CsvStorage:
@@ -173,3 +176,6 @@ class CsvStorage:
             with open(file_path, "a", newline="") as csv_file:
                 writer = csv.DictWriter(csv_file, fieldnames=self.fieldnames)
                 writer.writerow(flat_data)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(folder_path={self.pa})"

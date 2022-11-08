@@ -65,6 +65,8 @@ def main():
         )
     else:
         storage = CsvStorage()
+        
+    log.info(f"Storage {storage} instantiated.")
 
 
     first_floor_sensor = Sensor(name="first_floor", address="192.168.1.21")
