@@ -45,15 +45,9 @@ from husdata.controllers import Rego1000
 from controller.strategies import StrategyHandler, OffsetOutdoorTemperatureStrategy
 from controller.sensors import continuous_logging, Sensor
 from controller.storage import InfluxStorage, CsvStorage, Storage
+from controller.config import read_config
 
-SAMPLE_TIME = 60
-H60_IP_ADDRESS = "192.168.1.12"
-HOST = os.getenv("HOST", "0.0.0.0")
-PORT = os.getenv("PORT", 80)
-INFLUXDB_TOKEN = os.getenv("INFLUXDB_TOKEN")
-INFLUXDB_PORT = os.getenv("INFLUXDB_PORT", 8086)
-INFLUXDB_ADDRESS = os.getenv("INFLUXDB_ADDRESS", "influxdb2")
-
+config = read_config() 
 
 def main():
     log.info("Main entrypoint started")
@@ -61,7 +55,7 @@ def main():
     storage = set_up_storage()
 
     first_floor_sensor = Sensor(name="first_floor", address="192.168.1.21")
-    rego = Rego1000(H60_IP_ADDRESS)
+    rego = Rego1000(config.H60_ADDRESS)
 
     strategy_threads = set_up_strategies(
         rego=rego, indoor_temp_sensor=first_floor_sensor
@@ -90,7 +84,7 @@ def main():
     # Start the dashboard application server
     # NOTE: Debug mode set to 'True' messes upp logging to csv files somehow.
     # Related to threads?
-    app.app.run(host=HOST, port=PORT, debug=False)
+    app.app.run(host=config.HOST, port=config.PORT, debug=False)
 
 
 def set_up_storage() -> Storage:
@@ -100,11 +94,11 @@ def set_up_storage() -> Storage:
     Otherwise we fallback on a simple CsvStorage.
     """
 
-    if INFLUXDB_TOKEN:
+    if config.INFLUXDB_TOKEN:
         storage = InfluxStorage(
-            address=INFLUXDB_ADDRESS,
-            port=INFLUXDB_PORT,
-            token=INFLUXDB_TOKEN,
+            address=config.INFLUXDB_ADDRESS,
+            port=config.INFLUXDB_PORT,
+            token=config.INFLUXDB_TOKEN,
             org="climate-control",
             bucket="climate-control",
         )
@@ -142,7 +136,7 @@ def set_up_logging(
     logging_thread = threading.Thread(
         name="logging",
         target=continuous_logging,
-        args=(get_data_from_sensors, storage, SAMPLE_TIME),
+        args=(get_data_from_sensors, storage, config.SAMPLE_TIME),
         daemon=True,
     )
 
