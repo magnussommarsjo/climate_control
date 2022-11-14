@@ -77,10 +77,16 @@ def main():
     # the Rego1000 controller via H60Gateway
     def get_data_from_sensors() -> dict:
         """Function to be used in continuous logging"""
-        first_floor_sensor.update()
-        sensor_data = first_floor_sensor.to_dict()
+        if first_floor_sensor.update():
+            sensor_data = first_floor_sensor.to_dict()
+        else:
+            sensor_data = {}
+
         rego_data = rego.get_all_data()
-        rego_data = Rego1000.translate_data(rego_data)
+        if rego_data is not None:
+            rego_data = Rego1000.translate_data(rego_data)
+        else:
+            rego_data = {}
         timestamp = datetime.now().isoformat()
         return {"timestamp": timestamp, **sensor_data, **rego_data}
 

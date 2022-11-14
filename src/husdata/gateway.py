@@ -91,7 +91,7 @@ class H60:
     def get_status(self) -> Optional[dict]:
         return self._get_data_from_url(self.url + "status")
 
-    def get_all_data(self, convert: bool = True) -> dict:
+    def get_all_data(self, convert: bool = True) -> Optional[dict]:
         data = self._get_data_from_url(self.url + "alldata")
         if convert:
             for idx, value in data.items():
