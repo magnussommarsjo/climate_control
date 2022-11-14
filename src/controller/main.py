@@ -14,6 +14,7 @@ import traceback
 import threading
 import time
 from datetime import datetime
+from flask import Response, make_response
 
 
 # Setting up logging
@@ -115,7 +116,12 @@ def main():
     # of threads. 
     @app.app.server.route("/health")
     def health_check():
-        return "{status: ok}"
+
+        # Check threads
+        if any(not thread.is_alive() for thread in threads):
+            return Response("{status: not_ok}", status=500, mimetype='application/json')
+
+        return Response("{status: ok}", status=200, mimetype='application/json')
 
     # Start the dashboard application server
     app.app.run(host=HOST, port=PORT, debug=False)

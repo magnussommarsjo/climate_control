@@ -178,4 +178,4 @@ class CsvStorage:
                 writer.writerow(flat_data)
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(folder_path={self.pa})"
+        return f"{self.__class__.__name__}(folder_path={self.path})"
