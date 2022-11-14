@@ -17,7 +17,7 @@ class H60:
         self.url = "http://" + address + "/api/"
 
     @staticmethod
-    def _get_data_from_url(url: str) -> dict:
+    def _get_data_from_url(url: str) -> Optional[dict]:
         response = httpx.get(url)
         if response.status_code == 200:
             return json.loads(response.text)
@@ -88,7 +88,7 @@ class H60:
         else:
             self.set_variable(idx, "1")
 
-    def get_status(self) -> dict:
+    def get_status(self) -> Optional[dict]:
         return self._get_data_from_url(self.url + "status")
 
     def get_all_data(self, convert: bool = True) -> dict:

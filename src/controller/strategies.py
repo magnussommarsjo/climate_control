@@ -43,21 +43,34 @@ class OffsetOutdoorTemperatureStrategy(ControlStrategy):
     ) -> None:
         self.rego = rego
         self.get_indoor_temperature = indoor_temperature_callable
-        self.influence = influence
-        self.offset = 0.0
+        self.influence: float = influence
+        self.offset: float = 0.0
         self.indoor_temperature: Optional[float] = None
         self.setpoint_temperature: Optional[float] = None
         self.last_trigger: Optional[datetime] = None
 
     def trigger(self) -> None:
-        self.indoor_temperature = self.get_indoor_temperature()
-        ID = self.rego.ID
-        self.setpoint_temperature = self.rego.get_variable(ID.ROOM_TEMP_SETPOINT)
-        self.offset = (
-            self.indoor_temperature - self.setpoint_temperature
-        ) * self.influence
-        self.rego.set_variable(ID.OUTDOOR_TEMP_OFFSET, round(self.offset * 10))
+        if self.setpoint_temperature is None or self.indoor_temperature is None:
+            log.info("Could not find any setpoint value, set offset to 0")
+            self.offset = 0
+        else:
+            self.offset = (
+                self.indoor_temperature - self.setpoint_temperature
+            ) * self.influence
+
+        self.rego.set_variable(
+            self.rego.ID.OUTDOOR_TEMP_OFFSET, round(self.offset * 10)
+        )
         self.last_trigger = datetime.now()
+
+    def _update_temperatures(self) ->  None:
+        """Updates temperatuers needed for this strategy."""
+        # Update temperatures
+        self.indoor_temperature = self.get_indoor_temperature()
+        setpoint_temperature = self.rego.get_variable(self.rego.ID.ROOM_TEMP_SETPOINT)
+        if setpoint_temperature is not None:
+            self.setpoint_temperature = setpoint_temperature
+            log.info("Could not update setpoint temperature, uses old value")
 
     def is_triggerable(self) -> bool:
         if self.last_trigger is None:
