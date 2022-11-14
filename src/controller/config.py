@@ -1,20 +1,34 @@
-from dataclasses import dataclass
-import os
+"""Configuration parameters
 
-@dataclass
-class Config:
-    # Application
-    SAMPLE_TIME = os.getenv("SAMPLE_TIME", 60)
-    HOST = os.getenv("HOST", "0.0.0.0")
-    PORT = os.getenv("PORT", 80)
+This module contains a data structre and method for reading environment variables. 
+"""
 
-    # Husdata H60
-    H60_ADDRESS = os.getenv("H60_ADDRESS", "192.168.1.12")
-    
-    # InfluxDB integration
-    INFLUXDB_ADDRESS = os.getenv("INFLUXDB_ADDRESS", "influxdb2")
-    INFLUXDB_PORT = os.getenv("INFLUXDB_PORT", 8086)
-    INFLUXDB_TOKEN = os.getenv("INFLUXDB_TOKEN")
+from typing import Optional
 
-def read_config() -> Config:
-    return Config()
+from pydantic import BaseSettings
+
+
+class Config(BaseSettings):
+    SAMPLE_TIME: int = 60
+    HOST: str = "0.0.0.0"
+    PORT: int = 80
+    H60_ADDRESS: str
+    INFLUXDB_ADDRESS: str = "influxdb2"
+    INFLUXDB_PORT: int = 8086
+    INFLUXDB_TOKEN: Optional[str]
+
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+
+
+def read_config(**kwargs) -> Config:
+    """Read configuration parameters and environment variables
+
+    **kwargs:
+        key word arguments will override existing environment variables
+
+    Returns:
+        Config: _description_
+    """
+    return Config(**kwargs)

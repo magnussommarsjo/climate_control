@@ -7,9 +7,10 @@ services:
       - 8080:80
     working_dir: /climate_control
     environment:
+      TZ: Europe/Stockholm
       HOST: "0.0.0.0"
       PORT: 80
-      TZ: Europe/Stockholm
+      H60_ADDRESS: "192.168.1.12"
       INFLUXDB_TOKEN: ${DOCKER_INFLUXDB_INIT_ADMIN_TOKEN}
     volumes:
       - app-data:/climate_control/data/

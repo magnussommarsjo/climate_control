@@ -6,16 +6,13 @@ Main script that starts all threads and processes.
 - Initiates logging
 - Initiates Controller and type of storage
 """
-
+# Builtin packages
 import logging
-import os
 import sys
 import traceback
 import threading
-import time
 from datetime import datetime
 from typing import List
-from flask import Response, make_response
 
 
 # Setting up logging
@@ -39,6 +36,9 @@ def exception_handler(*exc_info):
 
 sys.excepthook = exception_handler
 
+# External packages
+from flask import Response
+
 # Local package imports after logging is set up in case of errors when importing packages
 from dashboard import app
 from husdata.controllers import Rego1000
@@ -47,7 +47,8 @@ from controller.sensors import continuous_logging, Sensor
 from controller.storage import InfluxStorage, CsvStorage, Storage
 from controller.config import read_config
 
-config = read_config() 
+config = read_config()
+
 
 def main():
     log.info("Main entrypoint started")
