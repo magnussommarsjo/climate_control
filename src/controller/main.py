@@ -94,6 +94,8 @@ def set_up_storage() -> Storage:
     If we have a token for InfluxDB the assume that is the storage to use.
     Otherwise we fallback on a simple CsvStorage.
     """
+    
+    log.info("Setting up storage")
 
     if config.INFLUXDB_TOKEN:
         storage = InfluxStorage(
@@ -118,6 +120,8 @@ def set_up_logging(
     Setting up continuous logging signals both from custom sensors as well as
     the Rego1000 controller via H60Gateway
     """
+    
+    log.info("Setting up logging")
 
     def get_data_from_sensors() -> dict:
         """Function to be used in continuous logging"""
@@ -148,6 +152,8 @@ def set_up_strategies(
     rego: Rego1000, indoor_temp_sensor: Sensor
 ) -> List[threading.Thread]:
     """Setting up Control strategies"""
+    log.info("Setting up strategies")
+
     offset_strategy = OffsetOutdoorTemperatureStrategy(
         rego=rego,
         indoor_temperature_callable=lambda: indoor_temp_sensor.temperature,

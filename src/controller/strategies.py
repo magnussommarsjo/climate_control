@@ -30,6 +30,9 @@ class ControlStrategy(abc.ABC):
         logging
         """
         raise NotImplementedError()
+    
+    def __str__(self):
+        return f"{self.__class__.__name__}(...)"
 
 
 class OffsetOutdoorTemperatureStrategy(ControlStrategy):
@@ -107,10 +110,12 @@ class StrategyHandler:
             log.info(f"Strategy {strategy} already registered")
             return
 
+        log.info(f"Registered strategy: {strategy}")
         self.strategies.append(strategy)
 
     def unregister_strategy(self, strategy: ControlStrategy) -> None:
         if strategy in self.strategies:
+            log.info(f"Removed strategy: {strategy}")
             self.strategies.remove(strategy)
 
     def stop_strategies(self):
