@@ -53,6 +53,7 @@ class OffsetOutdoorTemperatureStrategy(ControlStrategy):
         self.last_trigger: Optional[datetime] = None
 
     def trigger(self) -> None:
+        self._update_temperatures()
         if self.setpoint_temperature is None or self.indoor_temperature is None:
             log.info("Could not find any setpoint value, set offset to 0")
             self.offset = 0
