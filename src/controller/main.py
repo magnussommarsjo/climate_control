@@ -22,11 +22,16 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
+
 # Log to console as well.
 consoleHandler = logging.StreamHandler()
 logFormatter = logging.Formatter(FORMAT)
 consoleHandler.setFormatter(logFormatter)
-log.addHandler(consoleHandler)
+
+# Add consolHandler to all loggers
+for name, item in logging.root.manager.loggerDict.items():
+    if isinstance(item, logging.Logger):
+        item.addHandler(consoleHandler)
 
 # Logg all unhandled exceptions
 def exception_handler(*exc_info):
