@@ -55,11 +55,19 @@ class ExternalSensor(Sensor):
         self.sensor = DHT22(machine.Pin(pin_no, machine.Pin.PULL_UP))
     
     def read(self):
-        self.sensor.measure()
-        temperature = self.sensor.temperature()
-        humidity = self.sensor.humidity()
-        
-        return {"temperature": temperature, "humidity": humidity}
+        """Reads temperature and humidity as a dictionary.
+
+        If unsucessfull return None.
+        """
+        try:
+            self.sensor.measure()
+            temperature = self.sensor.temperature()
+            humidity = self.sensor.humidity()
+            
+            return {"temperature": temperature, "humidity": humidity}
+        except OSError as e:
+            print(e)
+            return None
     
     
     
