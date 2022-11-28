@@ -18,6 +18,8 @@ Also a file `config.json` needs to be created on the board including the followi
 {
     "SSID": "YOUR_WIFI_SSID",
     "password": "YOUR_WIFI_PASSWORD",
+    "sample_rate": 10,  # time in seconds between mqtt publish"
+    "dht_data_pin": 2,  # Pin where data is connected
 }
 ```
 
