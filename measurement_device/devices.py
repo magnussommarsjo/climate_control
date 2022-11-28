@@ -3,10 +3,27 @@
 """
 
 import machine
+from utime import sleep
 from dht import DHT22
 
 
 board_led = machine.Pin('LED', machine.Pin.OUT)
+
+def blink_board(duration: int, frequency: float):
+    """Blinks led light for a period of time"""
+    if frequency < 0 or duration < 0:
+        raise ValueError("arguments cant be 0 or below")
+    
+    delay = 1 / frequency / 2
+    num_cycles = int(duration * frequency)
+    
+    board_led.off()
+    for _ in range(num_cycles):
+        board_led.on()
+        sleep(delay)
+        board_led.off()
+        sleep(delay)
+        
 
 
 class Sensor:
