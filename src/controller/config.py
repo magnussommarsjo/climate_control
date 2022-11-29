@@ -3,7 +3,7 @@
 This module contains a data structre and method for reading environment variables. 
 """
 
-from typing import Optional, List
+from typing import Optional
 
 from pydantic import BaseSettings
 
@@ -16,7 +16,9 @@ class Config(BaseSettings):
     INFLUXDB_ADDRESS: str = "influxdb2"
     INFLUXDB_PORT: int = 8086
     INFLUXDB_TOKEN: Optional[str]
-    SENSORS: Optional[List[str]]
+    MQTT_HOST: str
+    MQTT_PORT: int = 1883
+    MQTT_CLIENT_ID: str = "controller.climate_control"
 
     class Config:
         env_file = ".env"
