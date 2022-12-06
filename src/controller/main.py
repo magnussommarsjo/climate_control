@@ -48,9 +48,10 @@ from flask import Response
 from dashboard import app
 from husdata.controllers import Rego1000
 from controller.strategies import StrategyHandler, OffsetOutdoorTemperatureStrategy
-from controller.sensors import continuous_logging, Sensor
+from controller.sensors import continuous_logging, MQTTSensor
 from controller.storage import InfluxStorage, CsvStorage, Storage
 from controller.config import read_config
+from controller.mqtt import MQTTHandler
 
 config = read_config()
 
@@ -58,9 +59,18 @@ config = read_config()
 def main():
     log.info("Main entrypoint started")
 
+    mqtt_handler = MQTTHandler(
+        client_id=config.MQTT_CLIENT_ID, 
+        mqtt_host=config.MQTT_HOST, 
+        mqtt_port=config.MQTT_PORT
+        )
+    mqtt_handler.connect()
+
     storage = set_up_storage()
 
-    first_floor_sensor = Sensor(name="first_floor", address="192.168.1.21")
+    first_floor_sensor = MQTTSensor(name="first_floor")
+    mqtt_handler.register_callback("+/sensor/reading", first_floor_sensor.update)
+
     rego = Rego1000(config.H60_ADDRESS)
 
     strategy_threads = set_up_strategies(
@@ -118,7 +128,7 @@ def set_up_storage() -> Storage:
 
 
 def set_up_logging(
-    indoor_temp_sensor: Sensor, rego: Rego1000, storage: Storage
+    indoor_temp_sensor: MQTTSensor, rego: Rego1000, storage: Storage
 ) -> threading.Thread:
     """Set up logging.
 
@@ -130,10 +140,8 @@ def set_up_logging(
 
     def get_data_from_sensors() -> dict:
         """Function to be used in continuous logging"""
-        if indoor_temp_sensor.update():
-            sensor_data = indoor_temp_sensor.to_dict()
-        else:
-            sensor_data = {}
+        
+        sensor_data = indoor_temp_sensor.to_dict()
 
         rego_data = rego.get_all_data()
         if rego_data is not None:
@@ -154,7 +162,7 @@ def set_up_logging(
 
 
 def set_up_strategies(
-    rego: Rego1000, indoor_temp_sensor: Sensor
+    rego: Rego1000, indoor_temp_sensor: MQTTSensor
 ) -> List[threading.Thread]:
     """Setting up Control strategies"""
     log.info("Setting up strategies")
