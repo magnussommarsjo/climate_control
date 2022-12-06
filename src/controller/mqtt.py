@@ -48,14 +48,14 @@ if __name__ == "__main__":
     log.addHandler(logging.StreamHandler(sys.stdout))
 
     connect_client_to_broker(client)
-    topic = "+/reading"
+    topic = "+/sensor/reading"
     client.subscribe(topic=topic)
 
 
     client.loop_start()
 
     for _ in range(10): # limit to 10 messages
-        message = message_que.get(timeout=10)
+        message = message_que.get(timeout=60)
         print("Got message")
 
     client.loop_stop()
