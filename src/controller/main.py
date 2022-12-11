@@ -93,9 +93,9 @@ def main():
 
         # Check threads
         if any(not thread.is_alive() for thread in threads):
-            return Response("{status: not_ok}", status=500, mimetype="application/json")
+            return Response("{'status': 'NOT_OK'}", status=500, mimetype="application/json")
 
-        return Response("{status: ok}", status=200, mimetype="application/json")
+        return Response("{'status': 'OK'}", status=200, mimetype="application/json")
 
     # Start the dashboard application server
     # NOTE: Debug mode set to 'True' messes upp logging to csv files somehow.
