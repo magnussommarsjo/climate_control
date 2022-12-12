@@ -3,6 +3,7 @@ Connection to WIFI network
 """
 
 import network
+import ubinascii
 import time
 
 class WiFi:
@@ -25,4 +26,11 @@ class WiFi:
             print('connected')
             status = self.wlan.ifconfig()
             print('ip = ' + status[0])
+    
+    def get_mac(self):
+        mac_byte = self.wlan.config('mac')
+        if mac_byte:
+            return ubinascii.hexlify(mac_byte).decode()
+        else:
+            None
 
