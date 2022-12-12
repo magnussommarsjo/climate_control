@@ -69,47 +69,7 @@ class Sensor:
         address = self.address
         return f"{self.__class__.__name__}({name=}, {address=})"
 
-class MQTTSensor:
-    """Custom Pico W sensor
 
-    Class for handling the custom built Pico W sensor
-    """
-
-    def __init__(self, name: str) -> None:
-        self.name = name
-        self._data: dict = {}
-        self.timestamp: Optional[datetime] = None
-
-    def update(self, topic: str, message: str) -> None:
-        """Update sensor with new values"""
-        data = json.dumps(message)
-        if data is not None:
-            self._data = data
-            self.timestamp = datetime.now()
-
-    @property
-    def temperature(self) -> float:
-        return self._data.get("temperature", None)
-
-    @property
-    def humidity(self) -> float:
-        return self._data.get("humidity", None)
-    
-    @property
-    def location(self) -> float:
-        return self._data.get("humidity", None)
-
-    def to_dict(self) -> dict:
-        return {
-            f"{self.name}.temperature": self.temperature,
-            f"{self.name}.humidity": self.humidity,
-            f"{self.name}.location": self.location,
-            f"{self.name}.timestamp": self.timestamp.isoformat(),
-        }
-
-    def __repr__(self) -> str:
-        name = self.name
-        return f"{self.__class__.__name__}({name=})"
 
 
 def continuous_logging(

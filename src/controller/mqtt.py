@@ -6,9 +6,10 @@ Subscribe to temperature sensors and H60?
 """
 
 from collections import defaultdict
+from datetime import datetime
 import logging
 from queue import Queue
-from typing import Callable
+from typing import Callable, Optional
 
 import paho.mqtt.client as mqtt
 
@@ -88,6 +89,42 @@ class MQTTHandler:
             self.client.unsubscribe(topic)
 
 
+class MQTTSensor:
+    """Sensor to handle callback from subscription. 
+    """
+
+    def __init__(self, handler: MQTTHandler,  sub_topic: str) -> None:
+        self.sub_topic: str = sub_topic
+        handler.register_callback(self.sub_topic, self.update_from_message)
+
+        self.id: str = None
+        self.type: str = None
+        self.location: str = None
+        self.value: float = None
+        self.timestamp: Optional[datetime] = None
+
+    def update_from_message(self, topic: str, message: str) -> None:
+        """Update sensor with new values"""
+        topic_parts = topic.split("/")
+        self.id = topic_parts[0],
+        self.location = '/'.join(topic_parts[1:-1])
+        self.type = topic_parts[-1]
+        self.value = float(message)
+        self.timestamp = datetime.now()
+
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.value,
+            "type": self.type,
+            "location": self.location,
+            "value": self.value,
+            "timestamp": self.timestamp.isoformat(),
+        }
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(id={self.id})"
+
 
 if __name__ == "__main__":
     # Log to console as well.
@@ -96,7 +133,7 @@ if __name__ == "__main__":
     log.setLevel(logging.INFO)
     log.addHandler(logging.StreamHandler(sys.stdout))
 
-    topic = "+/sensor/reading"
+    topic = "+/firstfloor/+/humidity"
 
     def my_callback(*args):
         print("Callback executed")
