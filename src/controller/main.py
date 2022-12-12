@@ -71,6 +71,8 @@ def main():
     sensor_firstfloor_temperature = MQTTSensor(mqtt_handler, "+/firstfloor/+/temperature")
     sensor_firstfloor_humidity  = MQTTSensor(mqtt_handler , "+/firstfloor/+/humidity")
 
+    mqtt_handler.start()
+
     rego = Rego1000(config.H60_ADDRESS)
 
     strategy_threads = set_up_strategies(
@@ -147,7 +149,10 @@ def set_up_logging(
     def get_data_from_sensors() -> dict:
         """Function to be used in continuous logging"""
         
-        sensor_data = {f"{sensor.id}_{sensor.type}": sensor.to_dict() for sensor in sensors}
+        sensor_data = {}
+        for sensor in sensors:
+            if sensor.value is not None:
+                sensor_data |= {f"{sensor.location}_{sensor.type}": sensor.value}
 
         rego_data = rego.get_all_data()
         if rego_data is not None:

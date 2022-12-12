@@ -85,6 +85,7 @@ def continuous_logging(
     Returns:
         NoReturn: Keeps on until process/thread is killed
     """
+    time.sleep(20)
     log.info(f"Continuous logging started with sample time {sample_time}s")
     while True:
         data = logging_function()

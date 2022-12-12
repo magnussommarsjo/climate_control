@@ -54,8 +54,12 @@ class OffsetOutdoorTemperatureStrategy(ControlStrategy):
 
     def trigger(self) -> None:
         self._update_temperatures()
-        if self.setpoint_temperature is None or self.indoor_temperature is None:
+        if self.setpoint_temperature is None:
             log.info("Could not find any setpoint value, set offset to 0")
+            self.offset = 0
+
+        elif self.indoor_temperature is None:
+            log.info("Could not find any indoor temperature, set offset to 0")
             self.offset = 0
         else:
             self.offset = (
@@ -74,6 +78,7 @@ class OffsetOutdoorTemperatureStrategy(ControlStrategy):
         setpoint_temperature = self.rego.get_variable(self.rego.ID.ROOM_TEMP_SETPOINT)
         if setpoint_temperature is not None:
             self.setpoint_temperature = setpoint_temperature
+        else:
             log.info("Could not update setpoint temperature, uses old value")
 
     def is_triggerable(self) -> bool:
@@ -124,6 +129,7 @@ class StrategyHandler:
         self.is_running = False
 
     def run_strategies(self):
+        time.sleep(10)
         log.info(f"Strategies started")
         self.is_running = True
         while self.is_running:

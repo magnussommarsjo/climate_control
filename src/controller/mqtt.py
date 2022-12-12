@@ -40,11 +40,8 @@ class MQTTHandler:
                 
         @self.client.message_callback()
         def _on_message(client: mqtt.Client, userdata, message: mqtt.MQTTMessage) -> None:
-            log.info("\nmessage received " + str(message.payload.decode("utf-8")))
-            log.info(f"{message.topic=}")
-            log.info(f"{message.qos=}")
-            log.info(f"{message.retain=}")
-            self._execute_callbacks_from(topic, message)
+            payload = str(message.payload.decode("utf-8"))
+            self._execute_callbacks_from(message.topic, payload)
 
 
     def _execute_callbacks_from(self, topic: str, message: str):
@@ -103,24 +100,28 @@ class MQTTSensor:
         self.value: float = None
         self.timestamp: Optional[datetime] = None
 
-    def update_from_message(self, topic: str, message: str) -> None:
+    def update_from_message(self, topic: str, message: mqtt.MQTTMessage) -> None:
         """Update sensor with new values"""
         topic_parts = topic.split("/")
         self.id = topic_parts[0],
-        self.location = '/'.join(topic_parts[1:-1])
+        self.location = '_'.join(topic_parts[1:-1])
         self.type = topic_parts[-1]
         self.value = float(message)
         self.timestamp = datetime.now()
+        # log.info(f"Sensor {self} got update")
 
 
     def to_dict(self) -> dict:
-        return {
-            "id": self.value,
-            "type": self.type,
-            "location": self.location,
-            "value": self.value,
-            "timestamp": self.timestamp.isoformat(),
-        }
+        if self.timestamp is None:
+            return None
+        else:
+            return {
+                "id": self.id,
+                "type": self.type,
+                "location": self.location,
+                "value": self.value,
+                "timestamp": self.timestamp.isoformat(),
+            }
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(id={self.id})"
