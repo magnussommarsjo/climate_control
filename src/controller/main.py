@@ -48,10 +48,10 @@ from flask import Response
 from dashboard import app
 from husdata.controllers import Rego1000
 from controller.strategies import StrategyHandler, OffsetOutdoorTemperatureStrategy
-from controller.sensors import continuous_logging, MQTTSensor
+from controller.sensors import continuous_logging
 from controller.storage import InfluxStorage, CsvStorage, Storage
 from controller.config import read_config
-from controller.mqtt import MQTTHandler
+from controller.mqtt import MQTTHandler, MQTTSensor
 
 config = read_config()
 
@@ -68,16 +68,22 @@ def main():
 
     storage = set_up_storage()
 
-    first_floor_sensor = MQTTSensor(name="first_floor")
-    mqtt_handler.register_callback("+/sensor/reading", first_floor_sensor.update)
+    sensor_firstfloor_temperature = MQTTSensor(mqtt_handler, "+/firstfloor/+/temperature")
+    sensor_firstfloor_humidity  = MQTTSensor(mqtt_handler , "+/firstfloor/+/humidity")
 
     rego = Rego1000(config.H60_ADDRESS)
 
     strategy_threads = set_up_strategies(
-        rego=rego, indoor_temp_sensor=first_floor_sensor
+        rego=rego, indoor_temp_sensor=sensor_firstfloor_temperature
     )
+
     logging_thread = set_up_logging(
-        rego=rego, indoor_temp_sensor=first_floor_sensor, storage=storage
+        rego=rego, 
+        sensors=[
+            sensor_firstfloor_temperature,
+            sensor_firstfloor_humidity,
+        ], 
+        storage=storage
     )
 
     # Start all threads. These are 'daemon threads and will be killed as soon as
@@ -128,7 +134,7 @@ def set_up_storage() -> Storage:
 
 
 def set_up_logging(
-    indoor_temp_sensor: MQTTSensor, rego: Rego1000, storage: Storage
+    sensors: list[MQTTSensor], rego: Rego1000, storage: Storage
 ) -> threading.Thread:
     """Set up logging.
 
@@ -141,7 +147,7 @@ def set_up_logging(
     def get_data_from_sensors() -> dict:
         """Function to be used in continuous logging"""
         
-        sensor_data = indoor_temp_sensor.to_dict()
+        sensor_data = {f"{sensor.id}_{sensor.type}": sensor.to_dict() for sensor in sensors}
 
         rego_data = rego.get_all_data()
         if rego_data is not None:
@@ -169,7 +175,7 @@ def set_up_strategies(
 
     offset_strategy = OffsetOutdoorTemperatureStrategy(
         rego=rego,
-        indoor_temperature_callable=lambda: indoor_temp_sensor.temperature,
+        indoor_temperature_callable=lambda: indoor_temp_sensor.value,
         influence=2,
     )
     strategy_handler = StrategyHandler()
