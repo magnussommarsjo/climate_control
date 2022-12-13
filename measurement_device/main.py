@@ -6,7 +6,6 @@ import json
 from umqtt.simple import MQTTClient
 
 from config import config
-from webserver import Webserver
 import devices
 from devices import blink_board
 
