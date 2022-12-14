@@ -58,15 +58,13 @@ except OSError as e:
     reset()
 
 def publish_status(client, msg):
-    topic_status = f"{CLIENT_ID}/status"
-    client.publish(topic_status, msg)
+    topic_status = f"{CLIENT_ID}/{ROOT_TOPIC}/status"
+    client.publish(topic_status, msg, retain=True)
     print("published", topic_status, msg)
 
-def publish_reading(client, reading):
-    topic_pub = f"{CLIENT_ID}/{ROOT_TOPIC}/reading"
-    
-    client.publish(f"{CLIENT_ID}/{ROOT_TOPIC}/temperature", str(reading["temperature"]))
-    client.publish(f"{CLIENT_ID}/{ROOT_TOPIC}/humidity", str(reading["humidity"]))
+def publish_reading(client, reading):    
+    client.publish(f"{CLIENT_ID}/{ROOT_TOPIC}/temperature", str(reading["temperature"]), retain=True)
+    client.publish(f"{CLIENT_ID}/{ROOT_TOPIC}/humidity", str(reading["humidity"]), retain=True)
     print(f"published to : {CLIENT_ID}/{ROOT_TOPIC}")
 
 # Publish loop
