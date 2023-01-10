@@ -3,7 +3,7 @@ import json
 from typing import Any, Optional
 import logging
 import husdata.exceptions as exceptions
-from .registers import DataType, isDataType
+from .registers import DataType, is_data_type
 
 log = logging.getLogger(__name__)
 
@@ -38,21 +38,21 @@ class H60:
         if value is None:
             return None
 
-        no = int(idx[0])
+        first_char = idx[0]
 
-        if no in {
+        if first_char in {
             DataType.DEGREES,
             DataType.PERCENT,
             DataType.AMPERE,
         }:
             value = float(value) / 10
-        elif no in {
+        elif first_char in {
             DataType.KWH,
         }:
             value = float(value) / 100
-        elif no == DataType.ON_OFF_BOOL:
+        elif first_char == DataType.ON_OFF_BOOL:
             value = bool(int(value))
-        elif no in {
+        elif first_char in {
             DataType.NUMBER,
             DataType.HOURS,
             DataType.MINUTES,
@@ -74,7 +74,7 @@ class H60:
         Raises:
             exceptions.TypeError: If Index is not an boolean
         """
-        if not isDataType(idx, DataType.ON_OFF_BOOL):
+        if not is_data_type(idx, DataType.ON_OFF_BOOL):
             raise exceptions.TypeError(f"{idx} is not a boolean")
 
         data = self.get_all_data()
