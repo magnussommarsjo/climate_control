@@ -3,7 +3,7 @@ import json
 from typing import Any, Optional
 import logging
 import husdata.exceptions as exceptions
-from .registers import DataType, is_data_type
+from .registers import DataType, is_data_type, is_in_data_types
 
 log = logging.getLogger(__name__)
 
@@ -38,27 +38,23 @@ class H60:
         if value is None:
             return None
 
-        first_char = idx[0]
-
-        if first_char in {
+        if is_in_data_types(idx, {
             DataType.DEGREES,
             DataType.PERCENT,
             DataType.AMPERE,
-        }:
+        }):
             value = float(value) / 10
-        elif first_char in {
-            DataType.KWH,
-        }:
+        elif is_data_type(idx, DataType.KWH):
             value = float(value) / 100
-        elif first_char == DataType.ON_OFF_BOOL:
+        elif is_data_type(idx, DataType.ON_OFF_BOOL):
             value = bool(int(value))
-        elif first_char in {
+        elif is_in_data_types(idx, {
             DataType.NUMBER,
             DataType.HOURS,
             DataType.MINUTES,
             DataType.DEGREE_MINUTES,
             DataType.KW,
-        }:
+        }):
             value = int(value)
         else:
             raise ValueError(f"Could not identify data type of {idx}")

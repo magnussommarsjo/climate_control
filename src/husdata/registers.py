@@ -1,4 +1,5 @@
 import enum
+from typing import Iterable
 
 
 @enum.unique
@@ -20,9 +21,12 @@ class DataType(str, enum.Enum):
     DEGREE_MINUTES = "8"
     KW = "9"
 
-def is_data_type(idx: str, data_type: DataType):
+def is_data_type(idx: str, data_type: DataType) -> bool:
     """Checks if a index is a acertain DataType"""
     return  idx[0] in data_type
+
+def is_in_data_types(idx: str, data_types: Iterable[DataType]) -> bool:
+    return any(is_data_type(idx, data_type) for data_type in data_types)
 
 @enum.unique
 class ID_C30(str, enum.Enum):
