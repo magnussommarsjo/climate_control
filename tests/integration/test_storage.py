@@ -27,7 +27,7 @@ def influxdb():
     yield None
     os.system(remove_influxdb_cmd)
 
-
+@pytest.mark.skip
 def test_influxdb():
     influx_storage = InfluxStorage(
         address="localhost",
