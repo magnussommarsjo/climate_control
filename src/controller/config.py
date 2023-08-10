@@ -5,7 +5,7 @@ This module contains a data structre and method for reading environment variable
 
 from typing import Optional
 
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 
 
 class Config(BaseSettings):
