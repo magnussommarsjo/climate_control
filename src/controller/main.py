@@ -7,6 +7,14 @@ Main script that starts all threads and processes.
 - Initiates Controller and type of storage
 """
 # Builtin packages
+from controller.mqtt import MQTTHandler, MQTTSensor
+from controller.config import read_config
+from controller.storage import InfluxStorage, CsvStorage, Storage
+from controller.sensors import continuous_logging
+from controller.strategies import StrategyHandler, OffsetOutdoorTemperatureStrategy
+from husdata.controllers import Rego1000
+from dashboard import app
+from flask import Response
 import logging
 import sys
 import traceback
@@ -34,6 +42,8 @@ for name, item in logging.root.manager.loggerDict.items():
         item.addHandler(consoleHandler)
 
 # Logg all unhandled exceptions
+
+
 def exception_handler(*exc_info):
     msg = "".join(traceback.format_exception(*exc_info))
     log.exception(f"Unhandled exception: {msg}")
@@ -42,16 +52,8 @@ def exception_handler(*exc_info):
 sys.excepthook = exception_handler
 
 # External packages
-from flask import Response
 
 # Local package imports after logging is set up in case of errors when importing packages
-from dashboard import app
-from husdata.controllers import Rego1000
-from controller.strategies import StrategyHandler, OffsetOutdoorTemperatureStrategy
-from controller.sensors import continuous_logging
-from controller.storage import InfluxStorage, CsvStorage, Storage
-from controller.config import read_config
-from controller.mqtt import MQTTHandler, MQTTSensor
 
 config = read_config()
 
@@ -60,16 +62,14 @@ def main():
     log.info("Main entrypoint started")
 
     mqtt_handler = MQTTHandler(
-        client_id=config.MQTT_CLIENT_ID, 
-        mqtt_host=config.MQTT_HOST, 
+        client_id=config.MQTT_CLIENT_ID,
+        mqtt_host=config.MQTT_HOST,
         mqtt_port=config.MQTT_PORT
-        )
+    )
     mqtt_handler.connect()
 
-    storage = set_up_storage()
-
-    sensor_firstfloor_temperature = MQTTSensor(mqtt_handler, "+/firstfloor/+/temperature")
-    sensor_firstfloor_humidity  = MQTTSensor(mqtt_handler , "+/firstfloor/+/humidity")
+    sensor_firstfloor_temperature = MQTTSensor(
+        mqtt_handler, "+/firstfloor/+/temperature")
 
     mqtt_handler.start()
 
@@ -79,19 +79,11 @@ def main():
         rego=rego, indoor_temp_sensor=sensor_firstfloor_temperature
     )
 
-    logging_thread = set_up_logging(
-        rego=rego, 
-        sensors=[
-            sensor_firstfloor_temperature,
-            sensor_firstfloor_humidity,
-        ], 
-        storage=storage
-    )
-
     # Start all threads. These are 'daemon threads and will be killed as soon as
     # main thread ends. In this case it will be when the dashboard server is closed.
-    threads = [logging_thread, *strategy_threads]
-    _ = [thread.start() for thread in threads]
+    threads = strategy_threads
+    for thread in threads:
+        thread.start()
 
     # Health check.
     # Needs to be defined heer instead of in the app.py module due to checking status
@@ -109,67 +101,6 @@ def main():
     # NOTE: Debug mode set to 'True' messes upp logging to csv files somehow.
     # Related to threads?
     app.app.run(host=config.HOST, port=config.PORT, debug=False)
-
-
-def set_up_storage() -> Storage:
-    """Set up storage.
-
-    If we have a token for InfluxDB the assume that is the storage to use.
-    Otherwise we fallback on a simple CsvStorage.
-    """
-    
-    log.info("Setting up storage")
-
-    if config.INFLUXDB_TOKEN:
-        storage = InfluxStorage(
-            address=config.INFLUXDB_ADDRESS,
-            port=config.INFLUXDB_PORT,
-            token=config.INFLUXDB_TOKEN,
-            org="climate-control",
-            bucket="climate-control",
-        )
-    else:
-        storage = CsvStorage()
-
-    log.info(f"Storage {storage} instantiated.")
-    return storage
-
-
-def set_up_logging(
-    sensors: list[MQTTSensor], rego: Rego1000, storage: Storage
-) -> threading.Thread:
-    """Set up logging.
-
-    Setting up continuous logging signals both from custom sensors as well as
-    the Rego1000 controller via H60Gateway
-    """
-    
-    log.info("Setting up logging")
-
-    def get_data_from_sensors() -> dict:
-        """Function to be used in continuous logging"""
-        
-        sensor_data = {}
-        for sensor in sensors:
-            if sensor.value is not None:
-                sensor_data |= {f"{sensor.location}_{sensor.type}": sensor.value}
-
-        rego_data = rego.get_all_data()
-        if rego_data is not None:
-            rego_data = Rego1000.translate_data(rego_data)
-        else:
-            rego_data = {}
-        timestamp = datetime.now().isoformat()
-        return {"timestamp": timestamp, **sensor_data, **rego_data}
-
-    logging_thread = threading.Thread(
-        name="logging",
-        target=continuous_logging,
-        args=(get_data_from_sensors, storage, config.SAMPLE_TIME),
-        daemon=True,
-    )
-
-    return logging_thread
 
 
 def set_up_strategies(
