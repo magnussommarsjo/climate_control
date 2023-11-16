@@ -18,11 +18,13 @@ class H60:
 
     @staticmethod
     def _get_data_from_url(url: str) -> Optional[dict]:
-        response = httpx.get(url)
-        if response.status_code == 200:
-            return json.loads(response.text)
-        else:
-            return None
+        try:
+            response = httpx.get(url)
+            if response.status_code == 200:
+                return json.loads(response.text)
+        except httpx.ConnectError:
+            log.warn(f"Connection issue tying to get data from {url}")
+        return None
 
     @staticmethod
     def _convert_raw_value(idx: str, value: str) -> Any:
