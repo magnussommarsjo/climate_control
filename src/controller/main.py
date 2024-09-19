@@ -9,17 +9,13 @@ Main script that starts all threads and processes.
 # Builtin packages
 from controller.mqtt import MQTTHandler, MQTTSensor
 from controller.config import read_config
-from controller.storage import InfluxStorage, CsvStorage, Storage
-from controller.sensors import continuous_logging
 from controller.strategies import StrategyHandler, OffsetOutdoorTemperatureStrategy
 from husdata.controllers import Rego1000
-from dashboard import app
-from flask import Response
+from flask import Response, Flask
 import logging
 import sys
 import traceback
 import threading
-from datetime import datetime
 from typing import List
 
 
@@ -85,10 +81,11 @@ def main():
     for thread in threads:
         thread.start()
 
+    app = Flask(__name__)
     # Health check.
     # Needs to be defined heer instead of in the app.py module due to checking status
     # of threads.
-    @app.app.server.route("/health")
+    @app.route("/health")
     def health_check():
 
         # Check threads
@@ -100,7 +97,7 @@ def main():
     # Start the dashboard application server
     # NOTE: Debug mode set to 'True' messes upp logging to csv files somehow.
     # Related to threads?
-    app.app.run(host=config.HOST, port=config.PORT, debug=False)
+    app.run(host=config.HOST, port=config.PORT, debug=False)
 
 
 def set_up_strategies(
