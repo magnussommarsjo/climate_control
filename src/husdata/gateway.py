@@ -93,7 +93,10 @@ class H60:
         data = self._get_data_from_url(self.url + "alldata")
         if convert:
             for idx, value in data.items():
-                data[idx] = self._convert_raw_value(idx, value)
+                try:
+                    data[idx] = self._convert_raw_value(idx, value)
+                except ValueError as e:
+                    log.error(e)
         return data
 
     def set_variable(self, idx: str, value: str) -> None:
