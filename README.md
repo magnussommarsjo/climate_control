@@ -6,12 +6,8 @@ Below is a schematic of the different components.
 ![](./attachments/schematics.PNG)
 
 This repo contains several sub-packages.
-- dashboard  
 - husdata 
 - controller
-
-> **dashboard**  
-> In this package, the web server is created with all visuals. Its based on `dash` and `plotly` package for visualization and `pandas` for data loading and processing. 
 
 > **husdata**  
 > This package includes everything to control and read data from the H60 husdata box and also a structure for handling different heat pump controllers like the Rego1000.  

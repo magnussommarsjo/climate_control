@@ -47,10 +47,6 @@ def exception_handler(*exc_info):
 
 sys.excepthook = exception_handler
 
-# External packages
-
-# Local package imports after logging is set up in case of errors when importing packages
-
 config = read_config()
 
 

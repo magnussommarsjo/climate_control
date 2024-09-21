@@ -4,11 +4,8 @@ from pathlib import Path
 import datetime
 import csv
 import logging
-from typing import Optional, List, Protocol, Tuple
+from typing import Optional, List, Protocol
 
-from influxdb_client import InfluxDBClient, Point
-from influxdb_client.client.write_api import SYNCHRONOUS
-import pandas as pd
 
 import controller.util as util
 
@@ -80,58 +77,6 @@ class MissingQueryError(Exception):
 
 class DuplicateQueryError(Exception):
     pass
-
-
-class InfluxStorage:
-    def __init__(self, address: str, port: str, token: str, org: str, bucket: str):
-        self.url = f"http://{address}:{port}"
-        self.token = token
-        self.org = org
-        self.bucket = bucket
-
-    def store(
-        self,
-        data: dict,
-        measurement: str = "default",
-        tags: Optional[List[Tuple[str, str]]] = None,
-    ) -> None:
-
-        with InfluxDBClient(url=self.url, token=self.token, org=self.org) as client:
-            time = datetime.datetime.utcnow()
-            points = [
-                Point(measurement).field(key, value).time(time)
-                for key, value in util.flatten_dict(data).items()
-            ]
-
-            if tags:
-                for point in points:
-                    for tag in tags:
-                        point.tag(tag[0], tag[1])
-
-            with client.write_api(write_options=SYNCHRONOUS) as write_api:
-                write_api.write(bucket=self.bucket, record=points)
-
-    def read(self, query: Optional[str] = None) -> pd.DataFrame:
-        """Query the influx database and return a dataframe.
-        If no query is specified then return everything from the bucket the past 24h
-        """
-        if query is None:
-            # Load everything past 24h
-            query = QueryBuilder().bucket(self.bucket).range("-24h").build()
-
-        with InfluxDBClient(url=self.url, token=self.token, org=self.org) as client:
-            response = client.query_api().query_data_frame(query)
-
-        if isinstance(response, list):
-            response = pd.concat(response)
-
-        return response
-
-    def __repr__(self) -> str:
-        return (
-            f"{self.__class__.__name__}"
-            f"(url={self.url}, org={self.org}, bucket={self.bucket}, token=...)"
-        )
 
 
 class CsvStorage:
