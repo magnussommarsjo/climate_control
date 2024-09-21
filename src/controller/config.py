@@ -2,11 +2,12 @@
 
 This module contains a data structre and method for reading environment variables. 
 """
-
-from typing import Optional
+import logging
 
 from pydantic import ConfigDict
 from pydantic_settings import BaseSettings
+
+logger = logging.getLogger(__name__)
 
 
 class Config(BaseSettings):
@@ -35,4 +36,6 @@ def read_config(**kwargs) -> Config:
     Returns:
         Config: _description_
     """
-    return Config(**kwargs)
+    config = Config(**kwargs)
+    logger.info(f"Initiated config: {config}")
+    return config
