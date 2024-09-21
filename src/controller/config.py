@@ -5,6 +5,7 @@ This module contains a data structre and method for reading environment variable
 
 from typing import Optional
 
+from pydantic import ConfigDict
 from pydantic_settings import BaseSettings
 
 
@@ -17,9 +18,12 @@ class Config(BaseSettings):
     MQTT_PORT: int = 1883
     MQTT_CLIENT_ID: str = "controller.climate_control"
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+
+    model_config = ConfigDict(
+        env_file = ".env",
+        env_file_encoding = "utf-8",
+        extra="allow"
+    )
 
 
 def read_config(**kwargs) -> Config:
