@@ -1,7 +1,5 @@
-FROM python:3.10
+FROM python:3.10-slim
 WORKDIR /climate_control
-COPY requirements.txt .
-RUN pip install -r requirements.txt
 COPY pyproject.toml setup.cfg ./
 COPY src src
 RUN pip install .

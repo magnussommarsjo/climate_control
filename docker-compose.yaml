@@ -12,30 +12,10 @@ services:
       PORT: 80
       H60_ADDRESS: ${H60_ADDRESS}
       MQTT_HOST: ${MQTT_HOST}
-      INFLUXDB_TOKEN: ${DOCKER_INFLUXDB_INIT_ADMIN_TOKEN}
     volumes:
       - app-data:/climate_control/data/
-    depends_on: 
-      - "influxdb2"
+
     restart: unless-stopped
-
-  influxdb2:
-    image: influxdb:2.4
-    ports:
-      - 8086:8086
-    environment:
-      DOCKER_INFLUXDB_INIT_MODE: setup
-      DOCKER_INFLUXDB_INIT_ORG: climate-control
-      DOCKER_INFLUXDB_INIT_BUCKET: climate-control
-      DOCKER_INFLUXDB_INIT_USERNAME: ${DOCKER_INFLUXDB_INIT_USERNAME}
-      DOCKER_INFLUXDB_INIT_PASSWORD: ${DOCKER_INFLUXDB_INIT_PASSWORD}
-      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${DOCKER_INFLUXDB_INIT_ADMIN_TOKEN}
-
-    volumes:
-      - influxdb2:/var/lib/influxdb2
-    restart: unless-stopped
-
 
 volumes:
   app-data:
-  influxdb2:
