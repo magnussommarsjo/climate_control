@@ -6,16 +6,19 @@ Main script that starts all threads and processes.
 - Initiates logging
 - Initiates Controller and type of storage
 """
+
 # Builtin packages
-from controller.mqtt import MQTTHandler, MQTTSensor
+import asyncio
+from typing import NoReturn
+
+import aiomqtt
+from controller.mqtt import MQTTSensor
 from controller.config import read_config
 from controller.strategies import StrategyHandler, OffsetOutdoorTemperatureStrategy
 from husdata.controllers import Rego1000
 import logging
 import sys
 import traceback
-import threading
-from typing import List
 
 
 # Setting up logging
@@ -49,53 +52,35 @@ sys.excepthook = exception_handler
 config = read_config()
 
 
-def main():
-    log.info("Main entrypoint started")
+async def log_sensors(sensors: list[MQTTSensor]) -> NoReturn:
+    while True:
+        for sensor in sensors:
+            log.info(f"{sensor.to_dict()}")
+        await asyncio.sleep(2)
 
-    mqtt_handler = MQTTHandler(
-        client_id=config.MQTT_CLIENT_ID,
-        mqtt_host=config.MQTT_HOST,
-        mqtt_port=config.MQTT_PORT
+
+async def main():
+    client = aiomqtt.Client(config.MQTT_HOST, username="climate-control")
+
+    temperature_sensor = MQTTSensor(
+        client, "+/firstfloor/+/temperature", name="temperature"
     )
-    mqtt_handler.connect()
+    humidity_sensor = MQTTSensor(client, "+/firstfloor/+/humidity", name="humidity")
 
-    sensor_firstfloor_temperature = MQTTSensor(
-        mqtt_handler, "+/firstfloor/+/temperature")
+    async with client:
+        async with asyncio.TaskGroup() as tg:
+            tg.create_task(temperature_sensor.start_sensor())
+            tg.create_task(humidity_sensor.start_sensor())
+            tg.create_task(log_sensors([temperature_sensor, humidity_sensor]))
 
-    mqtt_handler.start()
+    # rego = Rego1000(config.H60_ADDRESS)
 
-    rego = Rego1000(config.H60_ADDRESS)
-
-    strategy_threads = set_up_strategies(
-        rego=rego, indoor_temp_sensor=sensor_firstfloor_temperature
-    )
-
-    # Start all threads. These are 'daemon threads and will be killed as soon as
-    # main thread ends. In this case it will be when the dashboard server is closed.
-    threads = strategy_threads
-    for thread in threads:
-        thread.start()
-
-def set_up_strategies(
-    rego: Rego1000, indoor_temp_sensor: MQTTSensor
-) -> List[threading.Thread]:
-    """Setting up Control strategies"""
-    log.info("Setting up strategies")
-
-    offset_strategy = OffsetOutdoorTemperatureStrategy(
-        rego=rego,
-        indoor_temperature_callable=lambda: indoor_temp_sensor.value,
-        influence=2,
-    )
-    strategy_handler = StrategyHandler()
-    strategy_handler.register_strategy(offset_strategy)
-
-    strategy_thread = threading.Thread(
-        name="offset_strategy", target=strategy_handler.run_strategies, daemon=True
-    )
-
-    return [strategy_thread]
+    # strategy_threads = set_up_strategies(
+    #     rego=rego, indoor_temp_sensor=sensor_firstfloor_temperature
+    # )
 
 
 if __name__ == "__main__":
-    main()
+    log.info("Main entrypoint started")
+    asyncio.run(main())
+    log.info("stoped")
