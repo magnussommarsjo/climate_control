@@ -19,6 +19,7 @@ from husdata.controllers import Rego1000
 import logging
 import sys
 import traceback
+import pprint
 
 
 # Setting up logging
@@ -58,22 +59,37 @@ async def log_sensors(sensors: list[MQTTSensor]) -> NoReturn:
             log.info(f"{sensor.to_dict()}")
         await asyncio.sleep(2)
 
+async def log_rego(rego: Rego1000):
+    while True:
+        data = rego.get_all_data()
+        translated_data = rego.translate_data(data)
+        pprint.pprint(translated_data)
+        await asyncio.sleep(10)
+
+
 
 async def main():
     client = aiomqtt.Client(config.MQTT_HOST, username="climate-control")
 
     temperature_sensor = MQTTSensor(
-        client, "+/firstfloor/+/temperature", name="temperature"
+        client,
+        "+/firstfloor/+/temperature",
+        name="temperature",
     )
-    humidity_sensor = MQTTSensor(client, "+/firstfloor/+/humidity", name="humidity")
+    humidity_sensor = MQTTSensor(
+        client,
+        "+/firstfloor/+/humidity",
+        name="humidity",
+    )
+    rego = Rego1000(client)
 
     async with client:
         async with asyncio.TaskGroup() as tg:
             tg.create_task(temperature_sensor.start_sensor())
             tg.create_task(humidity_sensor.start_sensor())
-            tg.create_task(log_sensors([temperature_sensor, humidity_sensor]))
-
-    # rego = Rego1000(config.H60_ADDRESS)
+            tg.create_task(rego.start())
+            # tg.create_task(log_sensors([temperature_sensor, humidity_sensor]))
+            tg.create_task(log_rego(rego))
 
     # strategy_threads = set_up_strategies(
     #     rego=rego, indoor_temp_sensor=sensor_firstfloor_temperature

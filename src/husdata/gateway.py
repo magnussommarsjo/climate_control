@@ -23,6 +23,8 @@ class H60:
     async def start(self) -> NoReturn:
         await self.client.subscribe(self.topic)
         async for message in self.client.messages:
+            if not message.topic.matches(self.topic):
+                continue
             self._update_data_from_message(message)
 
     def _update_data_from_message(self, message: aiomqtt.Message) -> None:
@@ -58,9 +60,9 @@ class H60:
                 DataType.AMPERE,
             },
         ):
-            value = float(value) / 10
+            value = float(value)
         elif is_data_type(idx, DataType.KWH):
-            value = float(value) / 100
+            value = float(value)
         elif is_data_type(idx, DataType.ON_OFF_BOOL):
             value = bool(int(value))
         elif is_in_data_types(
@@ -73,7 +75,9 @@ class H60:
                 DataType.KW,
             },
         ):
-            value = int(value)
+            value = float(value)
+        elif idx == "STATUS":
+            value = str(value)
         else:
             raise ValueError(f"Could not identify data type of {idx}")
         return value

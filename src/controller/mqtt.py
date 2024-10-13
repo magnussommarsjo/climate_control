@@ -18,9 +18,9 @@ class MQTTSensor:
     """Sensor to handle callback from subscription. 
     """
 
-    def __init__(self, client: aiomqtt.Client, sub_topic: str, name: str) -> None:
+    def __init__(self, client: aiomqtt.Client, topic: str, name: str) -> None:
         self.client = client
-        self.sub_topic: str = sub_topic
+        self.topic: str = topic
         self.name = name
         self.id: str = None
         self.value: float = None
@@ -44,8 +44,10 @@ class MQTTSensor:
 
 
     async def start_sensor(self) -> NoReturn:
-        await self.client.subscribe(self.sub_topic)
+        await self.client.subscribe(self.topic)
         async for message in self.client.messages:
+            if not message.topic.matches(self.topic):
+                continue
             self.update_from_message(message)
 
 

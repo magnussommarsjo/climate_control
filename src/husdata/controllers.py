@@ -26,9 +26,6 @@ class Rego1000(H60):
         ID_C30.POOL_TEMP_SETPOINT,
     }
 
-    def __init__(self, address: str):
-        super().__init__(address)
-
     def set_variable(self, idx: str, value: str) -> None:
         if idx not in self.WRITABLE_VARS:
             raise exceptions.NotWritableError(f"{idx} is a read-only variable.")
