@@ -1,3 +1,6 @@
+# temp folders
+temp/
+
 # All json files
 *.json
 

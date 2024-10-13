@@ -130,7 +130,7 @@ class StrategyHandler:
 
     def run_strategies(self):
         time.sleep(10)
-        log.info(f"Strategies started")
+        log.info("Strategies started")
         self.is_running = True
         while self.is_running:
             time.sleep(1)
