@@ -11,7 +11,6 @@ from controller.mqtt import MQTTHandler, MQTTSensor
 from controller.config import read_config
 from controller.strategies import StrategyHandler, OffsetOutdoorTemperatureStrategy
 from husdata.controllers import Rego1000
-from flask import Response, Flask
 import logging
 import sys
 import traceback
@@ -76,25 +75,6 @@ def main():
     threads = strategy_threads
     for thread in threads:
         thread.start()
-
-    app = Flask(__name__)
-    # Health check.
-    # Needs to be defined heer instead of in the app.py module due to checking status
-    # of threads.
-    @app.route("/health")
-    def health_check():
-
-        # Check threads
-        if any(not thread.is_alive() for thread in threads):
-            return Response("{'status': 'NOT_OK'}", status=500, mimetype="application/json")
-
-        return Response("{'status': 'OK'}", status=200, mimetype="application/json")
-
-    # Start the dashboard application server
-    # NOTE: Debug mode set to 'True' messes upp logging to csv files somehow.
-    # Related to threads?
-    app.run(host=config.HOST, port=config.PORT, debug=False)
-
 
 def set_up_strategies(
     rego: Rego1000, indoor_temp_sensor: MQTTSensor
