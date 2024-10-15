@@ -32,7 +32,7 @@ class Rego1000(H60):
 
         if idx == ID_C30.OUTDOOR_TEMP_OFFSET:
             # Only accepts values  within range of -10 to 10 °C
-            value = clamp_value(value, -100, 100)
+            value = clamp_value(value, -10, 10)
 
         await super().set_variable(idx, value)
 
