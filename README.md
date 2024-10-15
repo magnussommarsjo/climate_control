@@ -11,7 +11,6 @@ This repo contains several sub-packages.
 
 > **husdata**  
 > This package includes everything to control and read data from the H60 husdata box and also a structure for handling different heat pump controllers like the Rego1000.  
-> It utilizes the `httpx` package for doing http requests from the H60 box.  
 
 > **controller**  
 > This package uses the other packages and also includes the main entry point for starting all. It also implements specific setup for the H60 together with Rego1000 controller.  
