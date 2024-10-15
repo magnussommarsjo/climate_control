@@ -26,7 +26,7 @@ class Rego1000(H60):
         ID_C30.POOL_TEMP_SETPOINT,
     }
 
-    def set_variable(self, idx: str, value: str) -> None:
+    async def set_variable(self, idx: str, value: str) -> None:
         if idx not in self.WRITABLE_VARS:
             raise exceptions.NotWritableError(f"{idx} is a read-only variable.")
 
@@ -34,7 +34,7 @@ class Rego1000(H60):
             # Only accepts values  within range of -10 to 10 °C
             value = clamp_value(value, -100, 100)
 
-        super().set_variable(idx, value)
+        await super().set_variable(idx, value)
 
     @classmethod
     def translate_data(cls, data: dict) -> dict:

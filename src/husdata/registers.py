@@ -29,7 +29,7 @@ def is_in_data_types(idx: str, data_types: Iterable[DataType]) -> bool:
     return any(is_data_type(idx, data_type) for data_type in data_types)
 
 @enum.unique
-class ID_C30(str, enum.Enum):
+class ID_C30(enum.StrEnum):
     """Indexes for IVT Rego 1000 Controller and Bosh Pro Control 500 Controller
 
     Reference:

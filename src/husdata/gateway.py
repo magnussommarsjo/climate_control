@@ -101,4 +101,4 @@ class H60:
 
     def get_variable(self, idx: str) -> Any:
         data = self.get_all_data()
-        return data[idx]
+        return data.get(idx)
