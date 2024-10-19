@@ -1,20 +1,31 @@
 import pytest
+from unittest.mock import MagicMock
 
 from husdata.gateway import H60
 from controller import config as cfg
 
 @pytest.fixture(scope='session')
 def config() -> cfg.Config:
-    """Get configurations/environment vraiables"""
-    return cfg.read_config()
+    """Get configurations/environment variables"""
+    return cfg.read_config(
+        SAMPLE_TIME = 60,
+        HOST = "0.0.0.0",
+        PORT = 80,
+        H60_ADDRESS = "",
+        MQTT_HOST = "",
+        MQTT_PORT = 1883,
+        MQTT_CLIENT_ID = "test"
+    )
 
 
 @pytest.fixture
 def h60(config: cfg.Config) -> H60:
     """H60 fixture with environments"""
-    h60 = H60(
-        address= config.H60_ADDRESS
-    )
+    mock_mqtt_client = MagicMock()
+    h60 = H60(client=mock_mqtt_client)
+    h60.raw_data = {
+        "dummy": "data"
+    }
     return h60
 
 
