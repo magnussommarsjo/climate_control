@@ -2,11 +2,28 @@
 This repository supports controlling and monitoring the internal climate of a household utilizing [custom climate sensors](./measurement_device/README.md) based on Raspberry Pi Pico W and a Heat-pump Controller from husdata.se
 
 Below is a schematic of the different components.  
-*Weather forecast and spot prices connection is not yet implemented*
-![](./attachments/schematics.PNG)
+
+```mermaid
+---
+title: Basic Setup
+---
+flowchart TD
+    mqtt[MQTT Broker]
+    controller[Climate Controller]
+    husdata[Husdata Gateway]
+    heatpump[Heat Pump]
+    sensor[Temperature Sensor]
+
+    mqtt <---> controller
+    mqtt <---> sensor
+    mqtt <---> husdata
+    husdata <---> heatpump
+
+```
+
 
 This repo contains several sub-packages.
-- husdata 
+- husdata
 - controller
 
 > **husdata**  
@@ -16,14 +33,14 @@ This repo contains several sub-packages.
 > This package uses the other packages and also includes the main entry point for starting all. It also implements specific setup for the H60 together with Rego1000 controller.  
 > Also handles and runs the different control strategies. 
 
-## Installation
-Installation of controller packages and monitoring dashboard is done by cloning this repository, change the current directory into the newly cloned one and running the command
+## Development
+Installation of controller packages is done by installing via `uv` from astral.
 ```sh
-pip install -e .
+uv sync --extra dev
 ```
 starting the controller by and dashboard using command
 ```sh
-python {path to cloned directory}/src/controller/main.py
+uv run ./src/controller/main.py
 ```
 The main script most likely needs to be modified for your specific setup.
 
@@ -33,7 +50,7 @@ When `cd` into your cloned repository:
 ```bash
 docker compose up -d
 ```
-This will download everything, build the docker image and deploy it. It will also set up a persistent volume for the data logging.
+This will download everything, build the docker image and deploy it.
 More information on docker [here](https://www.docker.com/).
 
 ### Raspberry Pi

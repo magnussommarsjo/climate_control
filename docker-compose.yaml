@@ -11,11 +11,5 @@ services:
       HOST: "0.0.0.0"
       PORT: 80
       H60_ADDRESS: ${H60_ADDRESS}
-      MQTT_HOST: ${MQTT_HOST}
-    volumes:
-      - app-data:/climate_control/data/
 
     restart: unless-stopped
-
-volumes:
-  app-data:
