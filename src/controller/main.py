@@ -1,10 +1,8 @@
 """
-Main script that starts all threads and processes.
-- Creates and starts all the Strategies
+Main script that starts all coroutines.
+- Creates and starts the Strategies
 - Starts logging of all signals
-- Starts the dashboard server
 - Initiates logging
-- Initiates Controller and type of storage
 """
 
 # Builtin packages

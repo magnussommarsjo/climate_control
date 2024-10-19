@@ -48,7 +48,7 @@ class OffsetOutdoorTemperatureStrategy():
             ) * self.influence
 
         await self._rego.set_variable(
-            self._rego.ID.OUTDOOR_TEMP_OFFSET, round(self.temperature_offest)
+            self._rego.ID.OUTDOOR_TEMP_OFFSET, self.temperature_offest
         )
         self.last_trigger = datetime.now()
 

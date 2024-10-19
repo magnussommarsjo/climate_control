@@ -1,9 +1,10 @@
 import logging
+from typing import Any
 
 from husdata.registers import ID_C30
 import husdata.exceptions as exceptions
 from husdata.gateway import H60
-from husdata.util import print_data, clamp_value
+from husdata.util import clamp_value
 
 log = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ class Rego1000(H60):
         ID_C30.POOL_TEMP_SETPOINT,
     }
 
-    async def set_variable(self, idx: str, value: str) -> None:
+    async def set_variable(self, idx: str, value: Any) -> None:
         if idx not in self.WRITABLE_VARS:
             raise exceptions.NotWritableError(f"{idx} is a read-only variable.")
 
@@ -39,14 +40,3 @@ class Rego1000(H60):
     @classmethod
     def translate_data(cls, data: dict) -> dict:
         return {id.name: data.get(id, None) for id in cls.ID}
-
-
-def main():
-    controller = Rego1000("192.168.1.12")
-    print_data(controller.get_all_data(), ID_C30)
-    controller.set_variable(ID_C30.ROOM_TEMP_SETPOINT, "200")  # WRITEABLE
-    # controller.set_variable(ID_C30.HEATING_SETPOINT, "200")  # READONLY
-
-
-if __name__ == "__main__":
-    main()
