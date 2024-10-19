@@ -9,7 +9,6 @@ Main script that starts all threads and processes.
 
 # Builtin packages
 import asyncio
-from typing import NoReturn
 
 import aiomqtt
 from controller.mqtt import MQTTSensor
@@ -19,7 +18,6 @@ from husdata.controllers import Rego1000
 import logging
 import sys
 import traceback
-import pprint
 
 
 # Setting up logging
@@ -50,22 +48,6 @@ def exception_handler(*exc_info):
 sys.excepthook = exception_handler
 
 config = read_config()
-
-
-async def log_sensors(sensors: list[MQTTSensor]) -> NoReturn:
-    while True:
-        for sensor in sensors:
-            log.info(f"{sensor.to_dict()}")
-        await asyncio.sleep(2)
-
-
-async def log_rego(rego: Rego1000):
-    while True:
-        data = rego.get_all_data()
-        translated_data = rego.translate_data(data)
-        pprint.pprint(translated_data)
-        await asyncio.sleep(10)
-
 
 async def main():
     client = aiomqtt.Client(config.MQTT_HOST, username="climate-control")
