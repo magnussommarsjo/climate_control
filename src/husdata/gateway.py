@@ -1,30 +1,43 @@
-import httpx
-import json
-from typing import Any, Optional
+from typing import Any, NoReturn, Optional
 import logging
-import husdata.exceptions as exceptions
 from .registers import DataType, is_data_type, is_in_data_types
+from .exceptions import TranslationError
+import aiomqtt
 
 log = logging.getLogger(__name__)
 
+
 class H60:
-    def __init__(self, address: str):
+    def __init__(
+        self, client: aiomqtt.Client, id: str | None = None, topic: str = "+/HP/#"
+    ):
         """Instantiates an H60 unit
 
         Args:
             address: IP Address to H60
         """
-        self.url = "http://" + address + "/api/"
+        self.client = client
+        self.topic = topic
+        self.id: str | None = id
+        self.raw_data: dict = {}
 
-    @staticmethod
-    def _get_data_from_url(url: str) -> Optional[dict]:
-        try:
-            response = httpx.get(url)
-            if response.status_code == 200:
-                return json.loads(response.text)
-        except httpx.ConnectError:
-            log.warn(f"Connection issue tying to get data from {url}")
-        return None
+    async def start(self) -> NoReturn:
+        await self.client.subscribe(self.topic)
+        async for message in self.client.messages:
+            if not message.topic.matches(self.topic):
+                continue
+            self._update_data_from_message(message)
+
+    def _update_data_from_message(self, message: aiomqtt.Message) -> None:
+        topic_parts = message.topic.value.split("/")
+        if self.id is None:
+            self.id = topic_parts[0]
+
+        if len(topic_parts) >= 3:
+            key = "/".join(topic_parts[2:])
+            value = message.payload.decode("utf-8")
+
+            self.raw_data |= {key: value}
 
     @staticmethod
     def _convert_raw_value(idx: str, value: str) -> Any:
@@ -38,72 +51,55 @@ class H60:
             value: Raw value from H60 request response
         """
         if value is None:
-            return None
+            return value
 
-        if is_in_data_types(idx, {
-            DataType.DEGREES,
-            DataType.PERCENT,
-            DataType.AMPERE,
-        }):
-            value = float(value) / 10
+        if is_in_data_types(
+            idx,
+            {
+                DataType.DEGREES,
+                DataType.PERCENT,
+                DataType.AMPERE,
+            },
+        ):
+            value = float(value)
         elif is_data_type(idx, DataType.KWH):
-            value = float(value) / 100
+            value = float(value)
         elif is_data_type(idx, DataType.ON_OFF_BOOL):
             value = bool(int(value))
-        elif is_in_data_types(idx, {
-            DataType.NUMBER,
-            DataType.HOURS,
-            DataType.MINUTES,
-            DataType.DEGREE_MINUTES,
-            DataType.KW,
-        }):
-            value = int(value)
+        elif is_in_data_types(
+            idx,
+            {
+                DataType.NUMBER,
+                DataType.HOURS,
+                DataType.MINUTES,
+                DataType.DEGREE_MINUTES,
+                DataType.KW,
+            },
+        ):
+            value = float(value)
+        elif idx == "STATUS":
+            value = str(value)
         else:
-            raise ValueError(f"Could not identify data type of {idx}")
+            raise TranslationError(f"Could not identify data type of {idx}")
         return value
 
-    def toggle_bool(self, idx: str, state: Optional[bool] = None) -> None:
-        """Toggles a boolean on or off
-
-        Args:
-            idx: Index to toggle
-            state: Optional state to set True/False, otherwise toggles between states
-
-        Raises:
-            exceptions.TypeError: If Index is not an boolean
-        """
-        if not is_data_type(idx, DataType.ON_OFF_BOOL):
-            raise exceptions.TypeError(f"{idx} is not a boolean")
-
-        data = self.get_all_data()
-        value: bool = data[idx]
-
-        if value == state:
-            # Same state, no need do do anything
-            return
-        if value:
-            self.set_variable(idx, "0")
-        else:
-            self.set_variable(idx, "1")
-
-    def get_status(self) -> Optional[dict]:
-        return self._get_data_from_url(self.url + "status")
-
     def get_all_data(self, convert: bool = True) -> Optional[dict]:
-        data = self._get_data_from_url(self.url + "alldata")
+        data = self.raw_data.copy()
         if convert:
             for idx, value in data.items():
                 try:
                     data[idx] = self._convert_raw_value(idx, value)
-                except ValueError as e:
+                except TranslationError as e:
                     log.error(e)
         return data
 
-    def set_variable(self, idx: str, value: str) -> None:
-        httpx.get(f"{self.url}set?idx={idx}&val={value}")
+    async def set_variable(self, idx: str, value: str) -> None:
+        if self.id is None:
+            raise ValueError("Cant identify heatpump id, try set it manually")
+
+        await self.client.publish(f"{self.id}/HP/SET/{idx}", payload=value)
         log.info(f"Tried to set variable {idx} to {value}")
-    
+
     def get_variable(self, idx: str) -> Any:
         data = self.get_all_data()
-        return data[idx]
-        
+        return data.get(idx)

@@ -1,22 +1,21 @@
 """
-Main script that starts all threads and processes.
-- Creates and starts all the Strategies
+Main script that starts all coroutines.
+- Creates and starts the Strategies
 - Starts logging of all signals
-- Starts the dashboard server
 - Initiates logging
-- Initiates Controller and type of storage
 """
+
 # Builtin packages
-from controller.mqtt import MQTTHandler, MQTTSensor
+import asyncio
+
+import aiomqtt
+from controller.mqtt import MQTTSensor
 from controller.config import read_config
-from controller.strategies import StrategyHandler, OffsetOutdoorTemperatureStrategy
+from controller.strategies import OffsetOutdoorTemperatureStrategy
 from husdata.controllers import Rego1000
-from flask import Response, Flask
 import logging
 import sys
 import traceback
-import threading
-from typing import List
 
 
 # Setting up logging
@@ -37,9 +36,8 @@ for name, item in logging.root.manager.loggerDict.items():
     if isinstance(item, logging.Logger):
         item.addHandler(consoleHandler)
 
+
 # Logg all unhandled exceptions
-
-
 def exception_handler(*exc_info):
     msg = "".join(traceback.format_exception(*exc_info))
     log.exception(f"Unhandled exception: {msg}")
@@ -49,73 +47,31 @@ sys.excepthook = exception_handler
 
 config = read_config()
 
+async def main():
+    client = aiomqtt.Client(config.MQTT_HOST, username="climate-control")
 
-def main():
-    log.info("Main entrypoint started")
-
-    mqtt_handler = MQTTHandler(
-        client_id=config.MQTT_CLIENT_ID,
-        mqtt_host=config.MQTT_HOST,
-        mqtt_port=config.MQTT_PORT
+    temperature_sensor = MQTTSensor(
+        client,
+        "+/firstfloor/+/temperature",
+        name="temperature",
     )
-    mqtt_handler.connect()
+    rego = Rego1000(client, id="8cce4efb8623", topic="8cce4efb8623/HP/#")
 
-    sensor_firstfloor_temperature = MQTTSensor(
-        mqtt_handler, "+/firstfloor/+/temperature")
-
-    mqtt_handler.start()
-
-    rego = Rego1000(config.H60_ADDRESS)
-
-    strategy_threads = set_up_strategies(
-        rego=rego, indoor_temp_sensor=sensor_firstfloor_temperature
-    )
-
-    # Start all threads. These are 'daemon threads and will be killed as soon as
-    # main thread ends. In this case it will be when the dashboard server is closed.
-    threads = strategy_threads
-    for thread in threads:
-        thread.start()
-
-    app = Flask(__name__)
-    # Health check.
-    # Needs to be defined heer instead of in the app.py module due to checking status
-    # of threads.
-    @app.route("/health")
-    def health_check():
-
-        # Check threads
-        if any(not thread.is_alive() for thread in threads):
-            return Response("{'status': 'NOT_OK'}", status=500, mimetype="application/json")
-
-        return Response("{'status': 'OK'}", status=200, mimetype="application/json")
-
-    # Start the dashboard application server
-    # NOTE: Debug mode set to 'True' messes upp logging to csv files somehow.
-    # Related to threads?
-    app.run(host=config.HOST, port=config.PORT, debug=False)
-
-
-def set_up_strategies(
-    rego: Rego1000, indoor_temp_sensor: MQTTSensor
-) -> List[threading.Thread]:
-    """Setting up Control strategies"""
-    log.info("Setting up strategies")
-
-    offset_strategy = OffsetOutdoorTemperatureStrategy(
+    strategy = OffsetOutdoorTemperatureStrategy(
         rego=rego,
-        indoor_temperature_callable=lambda: indoor_temp_sensor.value,
-        influence=2,
-    )
-    strategy_handler = StrategyHandler()
-    strategy_handler.register_strategy(offset_strategy)
-
-    strategy_thread = threading.Thread(
-        name="offset_strategy", target=strategy_handler.run_strategies, daemon=True
+        temperature_sensor=temperature_sensor,
+        influence=config.STRATEGY_INFLUENCE,
+        period=config.STRATEGY_PERIOD,
     )
 
-    return [strategy_thread]
+    async with client:
+        async with asyncio.TaskGroup() as tg:
+            tg.create_task(temperature_sensor.start_sensor())
+            tg.create_task(rego.start())
+            tg.create_task(strategy.start())
 
 
 if __name__ == "__main__":
-    main()
+    log.info("Main entrypoint started")
+    asyncio.run(main())
+    log.info("stoped")
