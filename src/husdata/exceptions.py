@@ -6,3 +6,6 @@ class NotWritableError(ControllerError):
 
 class TypeError(ControllerError):
     pass
+
+class TranslationError(ControllerError):
+    pass

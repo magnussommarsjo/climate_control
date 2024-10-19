@@ -1,6 +1,7 @@
 from typing import Any, NoReturn, Optional
 import logging
 from .registers import DataType, is_data_type, is_in_data_types
+from .exceptions import TranslationError
 import aiomqtt
 
 log = logging.getLogger(__name__)
@@ -50,7 +51,7 @@ class H60:
             value: Raw value from H60 request response
         """
         if value is None:
-            return None
+            return value
 
         if is_in_data_types(
             idx,
@@ -79,7 +80,7 @@ class H60:
         elif idx == "STATUS":
             value = str(value)
         else:
-            raise ValueError(f"Could not identify data type of {idx}")
+            raise TranslationError(f"Could not identify data type of {idx}")
         return value
 
     def get_all_data(self, convert: bool = True) -> Optional[dict]:
@@ -88,7 +89,7 @@ class H60:
             for idx, value in data.items():
                 try:
                     data[idx] = self._convert_raw_value(idx, value)
-                except ValueError as e:
+                except TranslationError as e:
                     log.error(e)
         return data
 

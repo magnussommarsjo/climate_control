@@ -1,6 +1,8 @@
 import enum
 from typing import Iterable
 
+from .exceptions import TranslationError
+
 
 @enum.unique
 class DataType(str, enum.Enum):
@@ -23,8 +25,10 @@ class DataType(str, enum.Enum):
 
 def is_data_type(idx: str, data_type: DataType) -> bool:
     """Checks if a index is a acertain DataType"""
-    return  idx[0] in data_type
-
+    try:
+        return  idx[0] in data_type
+    except IndexError as e:
+        raise TranslationError(f"Could not identify data type of {idx}")
 def is_in_data_types(idx: str, data_types: Iterable[DataType]) -> bool:
     return any(is_data_type(idx, data_type) for data_type in data_types)
 

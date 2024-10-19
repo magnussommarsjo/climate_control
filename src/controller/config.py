@@ -11,10 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 class Config(BaseSettings):
-    SAMPLE_TIME: int = 60
-    HOST: str = "0.0.0.0"
-    PORT: int = 80
-    H60_ADDRESS: str
+    STRATEGY_INFLUENCE: float = 3.0
+    STRATEGY_PERIOD: int = 3600
     MQTT_HOST: str
     MQTT_PORT: int = 1883
     MQTT_CLIENT_ID: str = "controller.climate_control"

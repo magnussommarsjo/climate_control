@@ -40,9 +40,8 @@ for name, item in logging.root.manager.loggerDict.items():
     if isinstance(item, logging.Logger):
         item.addHandler(consoleHandler)
 
+
 # Logg all unhandled exceptions
-
-
 def exception_handler(*exc_info):
     msg = "".join(traceback.format_exception(*exc_info))
     log.exception(f"Unhandled exception: {msg}")
@@ -81,8 +80,8 @@ async def main():
     strategy = OffsetOutdoorTemperatureStrategy(
         rego=rego,
         temperature_sensor=temperature_sensor,
-        influence=2,
-        period=10,  # 3600,  # Every hour
+        influence=config.STRATEGY_INFLUENCE,
+        period=config.STRATEGY_PERIOD,
     )
 
     async with client:
@@ -90,7 +89,6 @@ async def main():
             tg.create_task(temperature_sensor.start_sensor())
             tg.create_task(rego.start())
             tg.create_task(strategy.start())
-
 
 
 if __name__ == "__main__":
