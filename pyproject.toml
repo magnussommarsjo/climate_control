@@ -7,7 +7,7 @@ packages = ["src/conroller", "src/husdata"]
 
 [project]
 name = "climate-control"
-version = "0.0.4"
+version = "0.0.5"
 description = "Control strategies for heatpump"
 readme = "README.md"
 requires-python = ">=3.12"
