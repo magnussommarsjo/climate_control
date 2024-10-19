@@ -2,14 +2,14 @@ version: '3.8'
 
 services:
   app:
+    container_name: climate-control
     image: magnussommarsjo/climate-control:latest
-    ports:
-      - 8080:80
-    working_dir: /climate_control
+    working_dir: /app
     environment:
-      TZ: Europe/Stockholm
-      HOST: "0.0.0.0"
-      PORT: 80
-      H60_ADDRESS: ${H60_ADDRESS}
+      MQTT_HOST: ${MQTT_HOST}
+      STRATEGY_INFLUENCE: ${STRATEGY_INFLUENCE}
+      STRATEGY_PERIOD: ${STRATEGY_PERIOD}
 
     restart: unless-stopped
+
+
